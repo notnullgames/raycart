@@ -1,0 +1,19 @@
+<html>
+  <head>
+    <title>RayCart Demo</title>
+  </head>
+  <body>
+    <canvas id="canvas" />
+  </body>
+</html>
+
+<script type="module">
+  import raycart from "./raycart.js";
+
+  const cart = [
+    "c_basic_window.zip",
+    await fetch("c_basic_window.zip").then((r) => r.arrayBuffer()),
+  ];
+
+  const host = await raycart([cart], document.getElementById("canvas"));
+</script>
