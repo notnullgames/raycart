@@ -4,7 +4,7 @@ The entire API is exposed to the webassembly, so it can run on web & native, wit
 
 ## differences from raylib
 
-- We have not implmented every raylib function, but I am building them up 1-by-1
+- I have not implmented every raylib function, but I am building them up 1-by-1
 - export `CartInit`/`CartUpdate` for your code, instead of `main` using window/draw-management stuff (`SetTargetFPS`, `WindowShouldClose`, `BeginDrawing`, `EndDrawing`, `CloseWindow`, etc)
 
 ## carts
@@ -54,11 +54,12 @@ You can also use it on the web:
 ```html
 <canvas id="canvas" />
 <script type="module">
-  import raycart from "raycart.js";
-  const cart = await raycart(
-    await fetch("mygame.zip").then((r) => r.arrayBuffer()),
-    document.getElementById("canvas"),
-  );
+  import raycart from "./raycart.js";
+  const cart = [
+    "c_basic_window.zip",
+    await fetch("c_basic_window.zip").then((r) => r.arrayBuffer()),
+  ];
+  const host = await raycart([cart], document.getElementById("canvas"));
 </script>
 ```
 
