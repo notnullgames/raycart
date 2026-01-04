@@ -31,10 +31,10 @@ jobs:
         with:
           version: "latest"
 
-      - name: Configure CMake
+      - name: Build Configure
         run: emcmake cmake -B build -DPLATFORM=Web -DCMAKE_BUILD_TYPE=Release
 
-      - name: Build Project
+      - name: Build Wasm Host
         run: cmake --build build
 
       - name: Setup Pages
