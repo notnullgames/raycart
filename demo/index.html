@@ -7,13 +7,24 @@
   </body>
 </html>
 
+<script type="importmap">
+  {
+    "imports": {
+      "@easywasm/wasi": "https://esm.sh/@easywasm/wasi"
+    }
+  }
+</script>
+
 <script type="module">
   import raycart from "./raycart.js";
 
-  const cart = [
-    "c_basic_window.zip",
-    await fetch("c_basic_window.zip").then((r) => r.arrayBuffer()),
-  ];
+  const cartBytes = new Uint8Array(
+    await fetch("carts/basic_window_c.zip").then((r) => r.arrayBuffer()),
+  );
+  const host = await raycart(
+    [["basic_window_c.zip", cartBytes]],
+    document.getElementById("canvas"),
+  );
 
-  const host = await raycart([cart], document.getElementById("canvas"));
+  console.log(host);
 </script>

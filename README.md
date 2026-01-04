@@ -1,4 +1,4 @@
-The idea here is a webassembly-host implementation of [raylib](https://www.raylib.com/).
+The idea here is a webassembly-host implementation of [raylib](https://www.raylib.com/) 5.5.
 
 The entire API is exposed to the webassembly, so it can run on web & native, without recompile.
 
@@ -6,6 +6,7 @@ The entire API is exposed to the webassembly, so it can run on web & native, wit
 
 - I have not implmented every raylib function, but I am building them up 1-by-1
 - export `CartInit`/`CartUpdate` for your code, instead of `main` using window/draw-management stuff (`SetTargetFPS`, `WindowShouldClose`, `BeginDrawing`, `EndDrawing`, `CloseWindow`, etc)
+- You can only access cart-files with raylib functions. It's possible to expose the same filesystem to cart WASI, which I do in null0, but I left it out to keep things simple here (might add it later)
 
 ## carts
 
@@ -19,7 +20,7 @@ Here are the cart-languages we directly support, now:
 
 I am also working on these, but they are not as complete:
 
-- Javascript - Use quickjs, and put your game in main.js (in cart) not as efficient as walt/assemblyscript, so choose those, if you can
+- Javascript - Uses quickjs main.wasm, and put your game in main.js (in cart) not as efficient as walt/assemblyscript, so choose those, if you can
 - [Nelua](https://nelua.io/) - Use a lua-like language to make a compiled cart
 - [Assemblyscript](https://www.assemblyscript.org/) - Use a language very similar to typescript/javascript to make a compiled cart
 - [Walt](https://github.com/ballercat/walt) - Use a language very similar to javascript to make a light compiled cart
@@ -57,11 +58,16 @@ You can also use it on the web:
   import raycart from "./raycart.js";
   const cart = [
     "c_basic_window.zip",
-    await fetch("c_basic_window.zip").then((r) => r.arrayBuffer()),
+    new Uint8Array(
+      await fetch("c_basic_window.zip").then((r) => r.arrayBuffer()),
+    ),
   ];
   const host = await raycart([cart], document.getElementById("canvas"));
 </script>
 ```
+
+- The first param is an array of carts (files that will be mounted) which are arrays of name/bytes.
+- The second param is the canvas to attach to
 
 ## todo
 

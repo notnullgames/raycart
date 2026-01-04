@@ -1,0 +1,7 @@
+_malloc
+_free
+_main
+_InitWindow
+_ClearBackground
+_DrawText
+_LoadFileData

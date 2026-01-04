@@ -37,5 +37,5 @@ SET(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 add_subdirectory(host)
 
 if (NOT EMSCRIPTEN)
-  add_subdirectory(carts/c)
+  add_subdirectory(carts)
 endif()
