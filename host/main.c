@@ -28,27 +28,27 @@ RLAPI int main(int argc, char *argv[]) {
     // load all zip/dir args into PhysFS
 
     if (argc < 2) {
-        TraceLog(LOG_FATAL, "No carts/dirs provided.");
+        TraceLog(LOG_FATAL, "CART: No carts/dirs provided.");
         return 1;
     }
 
     if (PHYSFS_init(0) == 0) {
-        TraceLog(LOG_FATAL, "PhysFS could not be initialized.");
+        TraceLog(LOG_FATAL, "CART: PhysFS could not be initialized.");
         return 1;
     }
 
-    const char* newDir = GetWorkingDirectory();
-    if (PHYSFS_setWriteDir(newDir) == 0) {
-        TraceLog(LOG_FATAL, "Could not set write-dir: %s", newDir);
-        return 1;
-    }
+    // const char* newDir = GetWorkingDirectory();
+    // if (PHYSFS_setWriteDir(newDir) == 0) {
+    //     TraceLog(LOG_FATAL, "CART: Could not set write-dir: %s", newDir);
+    //     return 1;
+    // }
 
-    TraceLog(LOG_DEBUG, "PHYSFS: Initialized PhysFS");
+    TraceLog(LOG_INFO, "CART: Initialized PhysFS");
 
     for (int i=1;i<argc;i++) {
-        TraceLog(LOG_INFO, "Cart added: %s", argv[i]);
+        TraceLog(LOG_INFO, "CART: added %s", argv[i]);
         if (PHYSFS_mount(argv[i], NULL, 1) == 0) {
-            TraceLog(LOG_FATAL, "Cart could not be loaded: %s", argv[i]);
+            TraceLog(LOG_FATAL, "CART: Could not be loaded: %s", argv[i]);
             return 1;
         }
     }
@@ -69,10 +69,10 @@ RLAPI int main(int argc, char *argv[]) {
     CloseWindow();
     
     if (PHYSFS_deinit() == 0) {
-        TraceLog(LOG_FATAL, "PhysFS could not be de-initialized.");
+        TraceLog(LOG_FATAL, "CART: PhysFS could not be de-initialized.");
         return 1;
     }
-    TraceLog(LOG_DEBUG, "PHYSFS: Closed successfully");
+    TraceLog(LOG_INFO, "CART: Closed successfully");
 
     return 0;
 }
