@@ -42,7 +42,7 @@ RLAPI int main(int argc, char *argv[]) {
         TraceLog(LOG_FATAL, "Could not set write-dir: %s", newDir);
         return 1;
     }
-    
+
     TraceLog(LOG_DEBUG, "PHYSFS: Initialized PhysFS");
 
     for (int i=1;i<argc;i++) {
@@ -60,7 +60,7 @@ RLAPI int main(int argc, char *argv[]) {
     // SetLoadFileTextCallback()
     // SetSaveFileTextCallback()
 
-    // TODO: setup wamr
+    // TODO: on native setup wamr and live-reloading
 
     CartInit();
     while (!WindowShouldClose()) {
