@@ -8,8 +8,3 @@ void CartUpdate() {
     ClearBackground(RAYWHITE);
     DrawText("Congrats! You created your first raycart C window!", 190, 200, 20, LIGHTGRAY);
 }
-
-// currently, this is needed...
-int main() {
-    return 0;
-}

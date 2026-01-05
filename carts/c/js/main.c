@@ -30,7 +30,7 @@ void cart(const char* func_name, JSValue* args, int argc) {
   JS_FreeValue(ctx, cart);
 }
 
-int main(int argc, char* argv[]) {
+void CartInit(){
   rt = JS_NewRuntime();
   ctx = JS_NewContext(rt);
   global = JS_GetGlobalObject(ctx);

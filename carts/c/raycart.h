@@ -64,6 +64,11 @@ void CartInit();
 RC_EXPORT("CartUpdate")
 void CartUpdate();
 
+// currently, this is needed, to defer to CartInit
+int main() {
+    return 0;
+}
+
 
 // these will be generated, later
 
