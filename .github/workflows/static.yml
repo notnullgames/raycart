@@ -32,10 +32,10 @@ jobs:
           version: "latest"
 
       - name: Build Configure
-        run: emcmake cmake -B build -DPLATFORM=Web -DCMAKE_BUILD_TYPE=Release
+        run: emcmake cmake -B wbuild -DPLATFORM=Web -DCMAKE_BUILD_TYPE=Release
 
       - name: Build Wasm Host
-        run: cmake --build build
+        run: cmake --build wbuild
 
       - name: Setup Pages
         uses: actions/configure-pages@v5

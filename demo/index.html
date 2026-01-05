@@ -1,30 +1,41 @@
 <html>
   <head>
-    <title>RayCart Demo</title>
+    <title>Minimal PhysFS Tester</title>
   </head>
   <body>
-    <canvas id="canvas" />
+    <canvas id="canvas"></canvas>
   </body>
-</html>
-
-<script type="importmap">
-  {
-    "imports": {
-      "@easywasm/wasi": "https://esm.sh/@easywasm/wasi"
+  <script type="importmap">
+    {
+      "imports": {
+        "@easywasm/wasi": "https://esm.sh/@easywasm/wasi"
+      }
     }
-  }
-</script>
+  </script>
+  <script type="module">
+    import WasiPreview1 from "@easywasm/wasi";
+    import wasmLoader from "./raycart.mjs";
 
-<script type="module">
-  import raycart from "./raycart.js";
+    // Takes a zip-file with main.wasm and loads it with raylib imports
+    // set any emscripten-options you want in options
+    // arguments/preRun will merge
+    async function loadCart(zipFile, options = {}) {
+      const zipBytes = new Uint8Array(
+        await fetch(zipFile).then((r) => r.arrayBuffer()),
+      );
 
-  const cartBytes = new Uint8Array(
-    await fetch("carts/basic_window_c.zip").then((r) => r.arrayBuffer()),
-  );
-  const host = await raycart(
-    [["basic_window_c.zip", cartBytes]],
-    document.getElementById("canvas"),
-  );
+      return wasmLoader({
+        ...options,
+        arguments: options?.arguments || [zipFile],
+        preRun(mod) {
+          mod.FS.writeFile(zipFile, zipBytes);
+          mod.WasiPreview1 = WasiPreview1;
+          options?.preRun && options.preRun(mod);
+        },
+      });
+    }
 
-  console.log(host);
-</script>
+    const canvas = document.getElementById("canvas");
+    const host = await loadCart("basic_window_c.zip", { canvas });
+  </script>
+</html>

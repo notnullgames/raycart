@@ -1,41 +1,14 @@
-cmake_minimum_required(VERSION 3.18)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.15)
+PROJECT(raycart)
 
-project(raycart
-  DESCRIPTION "cross language/platform engine that mirrors raylib API"
-  HOMEPAGE_URL "https://github.com/notnullgames/raycart"
-  VERSION 0.0.1
-  LANGUAGES C
-)
+INCLUDE(FetchContent)
+IF(POLICY CMP0135)
+  CMAKE_POLICY(SET CMP0135 NEW)
+  SET(CMAKE_POLICY_DEFAULT_CMP0135 NEW)
+ENDIF()
 
-if(POLICY CMP0135)
-  cmake_policy(SET CMP0135 NEW)
-  set(CMAKE_POLICY_DEFAULT_CMP0135 NEW)
-endif()
+ADD_SUBDIRECTORY(host)
 
-if(POLICY CMP0077)
-  cmake_policy(SET CMP0077 NEW)
-  set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
-endif()
-
-if(POLICY CMP0169)
-  cmake_policy(SET CMP0169 NEW)
-  set(CMAKE_POLICY_DEFAULT_CMP0169 NEW)
-endif()
-
-# enable colors for ninja
-set(CMAKE_COLOR_DIAGNOSTICS ON)
-
-# Prevent dependencies from creating uninstall targets (VS generator doesn't support duplicates)
-# This is cleaner than ALLOW_DUPLICATE_CUSTOM_TARGETS which doesn't work with VS generators
-set(PHYSFS_DISABLE_INSTALL ON CACHE BOOL "" FORCE)
-set(RAYLIB_DISABLE_UNINSTALL ON CACHE BOOL "" FORCE)
-set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
-
-include(FetchContent)
-SET(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
-
-add_subdirectory(host)
-
-if (NOT EMSCRIPTEN)
-  add_subdirectory(carts)
-endif()
+IF (NOT EMSCRIPTEN)
+  ADD_SUBDIRECTORY(carts)
+ENDIF()

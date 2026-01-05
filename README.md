@@ -1,6 +1,6 @@
-The idea here is a webassembly-host implementation of [raylib](https://www.raylib.com/) 5.5.
+The idea here is a webassembly-host implementation of [raylib](https://www.raylib.com/) 5.5 for native & web.
 
-The entire API is exposed to the webassembly, so it can run on web & native, without recompile.
+The entire API is exposed to the webassembly, so it can run on web & native, without recompile, even on native.
 
 ## differences from raylib
 
@@ -25,54 +25,17 @@ I am also working on these, but they are not as complete:
 - [Nelua](https://nelua.io/) - Use a lua-like language to make a compiled cart
 - [Assemblyscript](https://www.assemblyscript.org/) - Use a language very similar to typescript/javascript to make a compiled cart
 - [Walt](https://github.com/ballercat/walt) - Use a language very similar to javascript to make a light compiled cart
-
-## building
-
-```sh
-# build native and carts
-cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
-cmake --build build
-
-# build web
-emcmake cmake -G Ninja -B wbuild -DPLATFORM=Web -DCMAKE_BUILD_TYPE=Release
-cmake --build wbuild
-
-# test web version
-npx -y live-server demo
-```
+- Rust
 
 ## usage
 
-Here is how to run it on native:
-
-```sh
-raycart <ZIP_OR_DIR>
-```
-
-It will mount multiple cart/dirs in order, so you can mix & match them.
-
-You can also use it on the web:
-
-```html
-<canvas id="canvas" />
-<script type="module">
-  import raycart from "./raycart.js";
-  const cart = [
-    "c_basic_window.zip",
-    new Uint8Array(
-      await fetch("c_basic_window.zip").then((r) => r.arrayBuffer()),
-    ),
-  ];
-  const host = await raycart([cart], document.getElementById("canvas"));
-</script>
-```
-
-- The first param is an array of carts (files that will be mounted) which are arrays of name/bytes.
-- The second param is the canvas to attach to
+You can see available commands with `npm run`, but the quickest way to get started is `npm start`.
 
 ## todo
 
 - host that works on ESP32 and other very low-end devices (2D-only, etc)
+- live-reloading web-build
+- live-reloading native build
 
 ## thanks
 
