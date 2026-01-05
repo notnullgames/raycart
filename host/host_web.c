@@ -87,7 +87,7 @@ EM_ASYNC_JS(bool, CartInit, (char *wasmBuffer, int bytesRead), {
 
 EM_JS(bool, CartUpdate, (), {
     Module._BeginDrawing();
-    // Module?.cart?.CartUpdate && Module.cart.CartUpdate();
+    Module?.cart?.CartUpdate && Module.cart.CartUpdate();
     Module._EndDrawing();
     return true;
 });
