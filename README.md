@@ -5,7 +5,7 @@ The entire API is exposed to the webassembly, so it can run on web & native, wit
 ## differences from raylib
 
 - I have not implmented every raylib function, but I am building them up 1-by-1
-- export `CartInit`/`CartUpdate` for your code, instead of `main` using window/draw-management stuff (`SetTargetFPS`, `WindowShouldClose`, `BeginDrawing`, `EndDrawing`, `CloseWindow`, etc)
+- export `CartInit`/`CartUpdate` for your code, instead of `main` using window/draw-management stuff (`SetTargetFPS`, `WindowShouldClose`, `BeginDrawing`, `EndDrawing`, `CloseWindow`, etc.) I might drop `CartInit` (and use main) but it's kinda nice to seperate them.
 - You can only access cart-files with raylib functions. It's possible to expose the same filesystem to cart WASI, which I do in null0, but I left it out to keep things simple here (might add it later)
 
 ## carts
