@@ -48,13 +48,15 @@ typedef struct Color {
 
 // callbacks that are reachable in host
 
+// these similate raylib functions, but use cart-space memory, and allow the host to manage me, if needed. 
+
 RC_EXPORT("malloc")
-void *_raycart_malloc(size_t size) {
+void* MemAlloc(size_t size) {
   return malloc(size);
 }
 
 RC_EXPORT("free")
-void _raycart_free(void *ptr) {
+void MemFree(void *ptr) {
   free(ptr);
 }
 
