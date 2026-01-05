@@ -5,7 +5,7 @@ The entire API is exposed to the webassembly, so anyone can run your game on web
 ## differences from raylib
 
 - export `CartInit`/`CartUpdate` for your code, instead of `main` using window/draw-management stuff (`SetTargetFPS`, `WindowShouldClose`, `BeginDrawing`, `EndDrawing`, `CloseWindow`, etc.) I might drop `CartInit` (and use main) but it's kinda nice to seperate them.
-- I have not implmented every raylib function (just enough to run a hello-world) but I will setup a code-generator at some point that wraps everything
+- I have not implmented every raylib function, but I will setup a code-generator at some point that wraps everything
 
 ## carts
 
@@ -16,10 +16,12 @@ Technically, you can write your cart in any language that compiles to (or can be
 Here are the cart-languages we directly support, now:
 
 - C - it's very similar to regular raylib
+- Javascript - Uses quickjs main.wasm, and put your game in main.js (in cart) not as efficient as walt/assemblyscript, so choose those, if you can
+
+Both have very limited functions exposed (just enough for hello-world.)
 
 I am also working on these, but they are not as complete:
 
-- Javascript - Uses quickjs main.wasm, and put your game in main.js (in cart) not as efficient as walt/assemblyscript, so choose those, if you can
 - Javascript (web) - this is similar to [raylib-wasm](https://github.com/konsumer/raylib-wasm), but you can also mount carts for filesystem, and dynamically code your game in JS.
 - [Nelua](https://nelua.io/) - Use a lua-like language to make a compiled cart
 - [Assemblyscript](https://www.assemblyscript.org/) - Use a language very similar to typescript/javascript to make a compiled cart
