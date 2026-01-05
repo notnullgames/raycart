@@ -1,6 +1,7 @@
 #include "physfs.h"
 #include "raylib.h"
 
+// these are implemented for each host-type
 extern bool CartInit(char *wasmBuffer, int bytesRead);
 extern bool CartUpdate();
 
