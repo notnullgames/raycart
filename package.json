@@ -5,8 +5,9 @@
     "build": "npx -y npm-run-all --parallel build:web build:native",
     "build:native": "cmake -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build",
     "build:web": "emcmake cmake -B wbuild -DCMAKE_BUILD_TYPE=Release -DPLATFORM=Web && cmake --build wbuild",
+    "build:carts": "cmake -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build --target=carts",
     "start": "npx -y live-server demo",
-    "prestart": "npm run build",
+    "prestart": "npx -y npm-run-all --parallel build:web build:carts",
     "clean": "rm -rf build wbuild demo/*.mjs demo/*.zip"
   }
 }
