@@ -6,5 +6,5 @@ void CartInit() {
 
 void CartUpdate() {
     ClearBackground(RAYWHITE);
-    DrawText("Congrats! You created your first raycart C window!", 190, 200, 20, LIGHTGRAY);
+    DrawText("Congrats! You created your first raycart C window!", 140, 200, 20, LIGHTGRAY);
 }

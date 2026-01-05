@@ -6,7 +6,7 @@ export function CartUpdate() {
   ClearBackground(RAYWHITE);
   DrawText(
     "Congrats! You created your first raycart JS window!",
-    190,
+    135,
     200,
     20,
     LIGHTGRAY,
