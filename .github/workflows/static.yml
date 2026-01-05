@@ -31,7 +31,7 @@ jobs:
         with:
           version: "latest"
 
-      - name: Build Web
+      - name: Build Web Host
         run: npm run build:web
 
       - name: Build Carts
