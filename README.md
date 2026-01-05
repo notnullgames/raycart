@@ -22,7 +22,7 @@ Both have very limited functions exposed (just enough for hello-world.)
 
 I am also working on these, but they are not as complete:
 
-- Javascript (web) - this is similar to [raylib-wasm](https://github.com/konsumer/raylib-wasm), but you can also mount carts for filesystem, and dynamically code your game in JS.
+- Javascript (web) - this is similar to [raylib-wasm](https://github.com/konsumer/raylib-wasm), but you can also mount carts for filesystem, and dynamically code your game in JS, using the browser's engine, not QuickJS.
 - [Nelua](https://nelua.io/) - Use a lua-like language to make a compiled cart
 - [Assemblyscript](https://www.assemblyscript.org/) - Use a language very similar to typescript/javascript to make a compiled cart
 - [Walt](https://github.com/ballercat/walt) - Use a language very similar to javascript to make a light compiled cart
