@@ -20,7 +20,9 @@ EM_ASYNC_JS(bool, CartInit, (char *wasmBuffer, int bytesRead), {
     const copyFromCart = (ptr, size) => {
         const cartMemory = new Uint8Array(cart.memory.buffer);
         const hostPtr = Module._MemAlloc(size);
-        Module.HEAPU8.set(hostPtr, cartMemory.slice(ptr, ptr+size));
+        // FIX 1: Arguments reversed - should be set(source, destOffset)
+        // FIX 2: Use subarray instead of slice for better performance
+        Module.HEAPU8.set(cartMemory.subarray(ptr, ptr + size), hostPtr);
         return hostPtr;
     };
 
@@ -33,39 +35,41 @@ EM_ASYNC_JS(bool, CartInit, (char *wasmBuffer, int bytesRead), {
         return strlen;
     };
 
-    const copyStringFromCart = (ptr) => copyFromCart(ptr, ptr + cartStringLen(ptr) + 1);
+    const copyStringFromCart = (ptr) => copyFromCart(ptr, cartStringLen(ptr) + 1);
 
     const decoder = new TextDecoder();
     const debugCartString = ptr => decoder.decode(new Uint8Array(cart.memory.buffer, ptr, cartStringLen(ptr)));
 
     const debugCartColor = ptr => {
-    const [r, g, b, a] = new Uint8Array(cart.memory.buffer, ptr, 4);
+        const [r, g, b, a] = new Uint8Array(cart.memory.buffer, ptr, 4);
         return `{ r: ${r}, g: ${g}, b: ${b}, a: ${a} }`;
     };
+
+    const cartColor = ptr => copyFromCart(ptr, 4);
 
     // TODO: Generate this from host wasm exports
     const raycart = {
         InitWindow(width, height, title) {
-            console.log(`CART called InitWindow(${width}, ${height}, "${debugCartString(title)}")`);
-            const cartTitle = copyStringFromCart(title);
-            Module._InitWindow(width, height, cartTitle);
-            Module._MemFree(cartTitle);
+            // console.log(`CART called InitWindow(${width}, ${height}, "${debugCartString(title)}")`);
+            const title_h = copyStringFromCart(title);
+            Module._InitWindow(width, height, title_h);
+            Module._MemFree(title_h);
         },
         
         ClearBackground(color) {
-            console.log(`CART called ClearBackground(${debugCartColor(color)})`);
-            const cartColor = copyFromCart(color, 4);
-            Module._ClearBackground(cartColor);
-            Module._MemFree(cartColor);
+            // console.log(`CART called ClearBackground(${debugCartColor(color)})`);
+            const color_h = cartColor(color);
+            Module._ClearBackground(color_h);
+            Module._MemFree(color_h);
         },
         
         DrawText(text, posX, posY, fontSize, color) {
-            console.log(`CART called DrawText("${debugCartString(text)}", ${posX}, ${posY}, ${fontSize}, ${debugCartColor(color)})`);
-            const cartText = copyStringFromCart(text);
-            const cartColor = copyFromCart(color, 4);
-            Module._DrawText(cartText, posX, posY, fontSize, cartColor);
-            Module._MemFree(cartText);
-            Module._MemFree(cartColor);
+            // console.log(`CART called DrawText("${debugCartString(text)}", ${posX}, ${posY}, ${fontSize}, ${debugCartColor(color)})`);
+            const text_h = copyStringFromCart(text);
+            const color_h = cartColor(color);
+            Module._DrawText(text_h, posX, posY, fontSize, color_h);
+            Module._MemFree(text_h);
+            Module._MemFree(color_h);
         }
     };
 
