@@ -1,11 +1,11 @@
 The idea here is a webassembly-host implementation of [raylib](https://www.raylib.com/) 5.5 for native & web.
 
-The entire API is exposed to the webassembly, so it can run on web & native, without recompile, even on native.
+The entire API is exposed to the webassembly, so anyone can run your game on web or without a web-browser (native wasm-host) without recompile.
 
 ## differences from raylib
 
-- I have not implmented every raylib function, but I am building them up 1-by-1
 - export `CartInit`/`CartUpdate` for your code, instead of `main` using window/draw-management stuff (`SetTargetFPS`, `WindowShouldClose`, `BeginDrawing`, `EndDrawing`, `CloseWindow`, etc.) I might drop `CartInit` (and use main) but it's kinda nice to seperate them.
+- I have not implmented every raylib function (just enough to run a hello-world) but I will setup a code-generator at some point that wraps everything
 
 ## carts
 
