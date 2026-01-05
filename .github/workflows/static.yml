@@ -34,9 +34,6 @@ jobs:
       - name: Build Web Host
         run: npm run build:web
 
-      - name: Build Carts
-        run: npm run build:carts
-
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
