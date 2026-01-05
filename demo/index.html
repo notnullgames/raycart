@@ -1,9 +1,26 @@
 <html>
   <head>
     <title>Minimal PhysFS Tester</title>
+    <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: black;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+    
+    canvas {
+      aspect-ratio: 4 / 3;
+      width: min(100%, calc(100vh * (4 / 3)));
+    }
+    </style>
   </head>
   <body>
-    <canvas id="canvas"></canvas>
+    <canvas id="canvas" />
   </body>
   <script type="importmap">
     {
