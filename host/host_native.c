@@ -1,9 +1,10 @@
 #ifndef EMSCRIPTEN
 
-#include "physfs.h"
 #include "raylib.h"
 
-bool CartInit() {
+// TODO: implement WAMR host
+
+bool CartInit(char *wasmBuffer, int bytesRead) {
     InitWindow(800, 450, "raylib [core] example - basic window");
     SetTargetFPS(60);
     return true;

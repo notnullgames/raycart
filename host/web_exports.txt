@@ -1,0 +1,9 @@
+_main
+_InitWindow
+_ClearBackground
+_DrawText
+_MemFree
+_MemAlloc
+_BeginDrawing
+_EndDrawing
+_InitWindow

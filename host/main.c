@@ -1,8 +1,9 @@
 #include "physfs.h"
 #include "raylib.h"
 
-extern bool CartInit();
+extern bool CartInit(char *wasmBuffer, int bytesRead);
 extern bool CartUpdate();
+
 
 int main(int argc, char *argv[]) {
     if (argc < 2) {
@@ -22,12 +23,37 @@ int main(int argc, char *argv[]) {
     }
 
     TraceLog(LOG_INFO, "Mounted %s successfully\n\n", argv[1]);
+
+    // Read main.wasm
+    PHYSFS_File *file = PHYSFS_openRead("main.wasm");
+    if (!file) {
+        TraceLog(LOG_FATAL, "Could not open main.wasm: %s\n", PHYSFS_getLastError());
+        return 1;
+    }
+    PHYSFS_sint64 size = PHYSFS_fileLength(file);
+    if (size < 0) {
+        TraceLog(LOG_FATAL, "Could not get size of main.wasm: %s\n", PHYSFS_getLastError());
+        PHYSFS_close(file);
+        return 1;
+    }
+    char *wasmBuffer = MemAlloc(size);
+    PHYSFS_sint64 bytes_read = PHYSFS_readBytes(file, wasmBuffer, size);
+    if (bytes_read != size) {
+        TraceLog(LOG_FATAL, "Failed to read main.wasm: %s\n", PHYSFS_getLastError());
+        MemFree(wasmBuffer);
+        PHYSFS_close(file);
+        return 1;
+    }
+
+    bool r = CartInit(wasmBuffer, bytes_read);
+    MemFree(wasmBuffer);
     
-    if (CartInit()) {
+    if (r) {
         while (!WindowShouldClose() && CartUpdate()) {}
     }
 
     CloseWindow();
     PHYSFS_deinit();
+
     return 0;
 }

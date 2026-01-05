@@ -46,6 +46,25 @@ typedef struct Color {
 #define MAGENTA    (Color){ 255, 0, 255, 255 }     // Magenta
 #define RAYWHITE   (Color){ 245, 245, 245, 255 }   // My own White (raylib logo)
 
+// callbacks that are reachable in host
+
+RC_EXPORT("malloc")
+void *_raycart_malloc(size_t size) {
+  return malloc(size);
+}
+
+RC_EXPORT("free")
+void _raycart_free(void *ptr) {
+  free(ptr);
+}
+
+RC_EXPORT("CartInit")
+void CartInit();
+
+RC_EXPORT("CartUpdate")
+void CartUpdate();
+
+
 // these will be generated, later
 
 RC_IMPORT("InitWindow")
