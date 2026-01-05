@@ -3,14 +3,21 @@
 #include "raylib.h"
 #include "emscripten.h"
 
-// TODO: move this out to external file for better ergonomics (and codegen)
+// TODO: move this out to external JS file for better ergonomics (and codegen)
 EM_ASYNC_JS(bool, CartInit, (char *wasmBuffer, int bytesRead), {
     if (!wasmBuffer || !bytesRead) {
+        console.error('wasm byte-length is 0.');
         return false;
     }
 
     const wasmBytes = Module.HEAPU8.slice(wasmBuffer, wasmBuffer+Number(bytesRead));
     if (!wasmBytes.length) {
+        console.error('wasm byte-length is not what was expted.');
+        return false;
+    }
+
+    if (!Module.wasi_snapshot_preview1) {
+        console.error('wasi_snapshot_preview1 has not been provided.');
         return false;
     }
 
@@ -20,8 +27,6 @@ EM_ASYNC_JS(bool, CartInit, (char *wasmBuffer, int bytesRead), {
     const copyFromCart = (ptr, size) => {
         const cartMemory = new Uint8Array(cart.memory.buffer);
         const hostPtr = Module._MemAlloc(size);
-        // FIX 1: Arguments reversed - should be set(source, destOffset)
-        // FIX 2: Use subarray instead of slice for better performance
         Module.HEAPU8.set(cartMemory.subarray(ptr, ptr + size), hostPtr);
         return hostPtr;
     };
@@ -73,13 +78,9 @@ EM_ASYNC_JS(bool, CartInit, (char *wasmBuffer, int bytesRead), {
         }
     };
 
-    // this could have WASI access to cart too,
-    // but I left it out for simplicity (so you must use raylib functions ot access files.)
-    const wasi_snapshot_preview1 = new  Module.WasiPreview1();
-
-    const { instance } = await WebAssembly.instantiate(wasmBytes, {raycart, wasi_snapshot_preview1});
+    const { instance } = await WebAssembly.instantiate(wasmBytes, {raycart, wasi_snapshot_preview1: Module.wasi_snapshot_preview1});
     const cart = Module.cart = instance.exports;
-    wasi_snapshot_preview1.start(cart);
+    Module.wasi_snapshot_preview1.start(cart);
     
     console.log('CART', cart);
 

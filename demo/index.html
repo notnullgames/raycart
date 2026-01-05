@@ -8,12 +8,14 @@
   <script type="importmap">
     {
       "imports": {
-        "@easywasm/wasi": "https://esm.sh/@easywasm/wasi"
+        "@easywasm/wasi": "https://esm.sh/@easywasm/wasi",
+        "fflate": "https://esm.sh/fflate/esm/browser.js"
       }
     }
   </script>
   <script type="module">
     import WasiPreview1 from "@easywasm/wasi";
+    import fflatefs from "./fflatefs.js";
     import wasmLoader from "./raycart.mjs";
 
     // Takes a zip-file with main.wasm and loads it with raylib imports
@@ -23,19 +25,19 @@
       const zipBytes = new Uint8Array(
         await fetch(zipFile).then((r) => r.arrayBuffer()),
       );
-
+      const fs = await fflatefs(zipBytes);
       return wasmLoader({
         ...options,
         arguments: options?.arguments || [zipFile],
         preRun(mod) {
           mod.FS.writeFile(zipFile, zipBytes);
-          mod.WasiPreview1 = WasiPreview1;
+          mod.wasi_snapshot_preview1 = new WasiPreview1({ fs });
           options?.preRun && options.preRun(mod);
         },
       });
     }
 
     const canvas = document.getElementById("canvas");
-    const host = await loadCart("basic_window_c.zip", { canvas });
+    const host = await loadCart("basic_window_js.zip", { canvas });
   </script>
 </html>
