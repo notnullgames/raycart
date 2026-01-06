@@ -72,7 +72,7 @@ Have a look at [index.html](demo/index.html) for how to use it in your own web-p
 You can also use the native runtime (without a browser) like this:
 
 ```sh
-./build/host/raycart ./build/carts/
+./build/host/raycart demo/textures_logo_c.zip
 ```
 
 ## todo
