@@ -49,7 +49,7 @@ npm run build:carts
 
 This compiles all the QuickJS source and `main.c` into a single `cart-js` WASM module.
 
-**Note:** You may see compiler warnings about pointer type conversions (`char *` vs `unsigned char *`) and QuickJS FILE* handling in WASI. These are expected and don't affect functionality - the build will complete successfully.
+**Note:** You may see compiler warnings about pointer type conversions (`char *` vs `unsigned char *`) and QuickJS FILE\* handling in WASI. These are expected and don't affect functionality - the build will complete successfully.
 
 ## Creating a JS Cart
 
@@ -58,12 +58,12 @@ This compiles all the QuickJS source and `main.c` into a single `cart-js` WASM m
 
 ```javascript
 export function CartInit() {
-  InitWindow(800, 450, "My Cart");
+  InitWindow(800, 450, 'My Cart')
 }
 
 export function CartUpdate() {
-  ClearBackground(RAYWHITE);
-  DrawText("Hello from JS!", 190, 200, 20, LIGHTGRAY);
+  ClearBackground(RAYWHITE)
+  DrawText('Hello from JS!', 190, 200, 20, LIGHTGRAY)
 }
 
 export function CartClose() {
@@ -104,46 +104,46 @@ JavaScript carts have access to:
 
 JavaScript types are automatically converted to/from C types:
 
-| C Type | JavaScript Type | Notes |
-|--------|----------------|-------|
-| `int`, `float` | `number` | Direct conversion |
-| `bool` | `boolean` | Direct conversion |
-| `const char*` | `string` | Null-terminated strings |
-| `Color` | `{r, g, b, a}` | Object with number fields |
-| `Vector2` | `{x, y}` | Object with number fields |
-| `Texture2D` | `{id, width, height, mipmaps, format}` | Object with number fields |
+| C Type         | JavaScript Type                        | Notes                     |
+| -------------- | -------------------------------------- | ------------------------- |
+| `int`, `float` | `number`                               | Direct conversion         |
+| `bool`         | `boolean`                              | Direct conversion         |
+| `const char*`  | `string`                               | Null-terminated strings   |
+| `Color`        | `{r, g, b, a}`                         | Object with number fields |
+| `Vector2`      | `{x, y}`                               | Object with number fields |
+| `Texture2D`    | `{id, width, height, mipmaps, format}` | Object with number fields |
 
 ## Example: Drawing
 
 ```javascript
 export function CartUpdate() {
   // Clear screen
-  ClearBackground(RAYWHITE);
+  ClearBackground(RAYWHITE)
 
   // Draw shapes
-  DrawRectangle(100, 100, 200, 100, RED);
-  DrawCircle(200, 300, 50, BLUE);
+  DrawRectangle(100, 100, 200, 100, RED)
+  DrawCircle(200, 300, 50, BLUE)
 
   // Draw text
-  DrawText("Score: 42", 10, 10, 20, DARKGRAY);
+  DrawText('Score: 42', 10, 10, 20, DARKGRAY)
 }
 ```
 
 ## Example: Input
 
 ```javascript
-let playerX = 400;
-let playerY = 225;
+let playerX = 400
+let playerY = 225
 
 export function CartUpdate() {
   // Handle input
-  if (IsKeyDown(KEY_RIGHT)) playerX += 2;
-  if (IsKeyDown(KEY_LEFT)) playerX -= 2;
-  if (IsKeyDown(KEY_DOWN)) playerY += 2;
-  if (IsKeyDown(KEY_UP)) playerY -= 2;
+  if (IsKeyDown(KEY_RIGHT)) playerX += 2
+  if (IsKeyDown(KEY_LEFT)) playerX -= 2
+  if (IsKeyDown(KEY_DOWN)) playerY += 2
+  if (IsKeyDown(KEY_UP)) playerY -= 2
 
-  ClearBackground(RAYWHITE);
-  DrawCircle(playerX, playerY, 20, MAROON);
+  ClearBackground(RAYWHITE)
+  DrawCircle(playerX, playerY, 20, MAROON)
 }
 ```
 
@@ -174,11 +174,13 @@ The following raylib functions are **not** available in JS carts (74 functions e
 ## Performance
 
 QuickJS carts have some overhead compared to native C carts:
+
 - Type conversions between JS and C
 - QuickJS JIT compilation
 - Additional memory usage
 
 For performance-critical code, consider using C carts instead. QuickJS carts are ideal for:
+
 - Rapid prototyping
 - Game logic and scripting
 - UI and menus

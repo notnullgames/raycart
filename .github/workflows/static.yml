@@ -2,7 +2,7 @@ name: Deploy static content to Pages
 
 on:
   push:
-    branches: ["main"]
+    branches: ['main']
   workflow_dispatch:
 
 permissions:
@@ -11,7 +11,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: "pages"
+  group: 'pages'
   cancel-in-progress: false
 
 jobs:
@@ -29,7 +29,7 @@ jobs:
       - name: Install emscripten
         uses: mymindstorm/setup-emsdk@v14
         with:
-          version: "latest"
+          version: 'latest'
 
       - name: Build Web Host
         run: npm run build:web
@@ -40,7 +40,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: "demo"
+          path: 'demo'
 
       - name: Deploy to GitHub Pages
         id: deployment

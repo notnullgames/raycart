@@ -5,7 +5,7 @@ The entire API is exposed to the webassembly, so anyone can run your game on web
 ## differences from raylib
 
 - export `CartInit`/`CartUpdate` for your code, instead of `main` using window/draw-management stuff (`SetTargetFPS`, `WindowShouldClose`, `BeginDrawing`, `EndDrawing`, `CloseWindow`, etc.) I might drop `CartInit` (and use main) but it's kinda nice to seperate them.
-- I have not implmented every raylib function, but I will setup a code-generator at some point that wraps everything
+- I have not implmented every raylib function, but I am working on adding most things to the code-generators.
 
 ## carts
 

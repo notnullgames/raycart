@@ -27,6 +27,7 @@ Generates `host/host_web.c` from `raylib_api.json`. This creates JavaScript bind
 ### Key patterns
 
 **Functions returning void:**
+
 ```javascript
 InitWindow(width, height, title) {
     const title_h = cartString(title);
@@ -36,6 +37,7 @@ InitWindow(width, height, title) {
 ```
 
 **Functions returning structs:**
+
 ```javascript
 LoadTexture(resultPtr, fileName) {
     const fileName_h = cartString(fileName);
@@ -48,6 +50,7 @@ LoadTexture(resultPtr, fileName) {
 ```
 
 **Functions with struct parameters:**
+
 ```javascript
 ClearBackground(color) {
     const color_h = cartColor(color);
@@ -63,6 +66,7 @@ npm run codegen
 ```
 
 Or directly:
+
 ```bash
 node codegen/generate_host_web.js
 ```
@@ -73,10 +77,10 @@ By default, all raylib functions are exposed except those in the `functionsToExc
 
 ```javascript
 const functionsToExclude = [
-  'MemAlloc',     // Cart has its own memory management
-  'MemFree',
+  'MemAlloc', // Cart has its own memory management
+  'MemFree'
   // Add more function names to exclude here
-];
+]
 ```
 
 ### Special cases
@@ -110,6 +114,7 @@ Generates the complete `carts/c/raycart.h` header file from `raylib_api.json`. T
 The complete header includes:
 
 **Types:**
+
 ```c
 typedef struct Vector2 {
     float x;
@@ -121,6 +126,7 @@ typedef Vector4 Quaternion;
 ```
 
 **Enums:**
+
 ```c
 typedef enum {
     FLAG_VSYNC_HINT = 64,
@@ -130,12 +136,14 @@ typedef enum {
 ```
 
 **Defines:**
+
 ```c
 #define LIGHTGRAY    (Color){ 200, 200, 200, 255 }
 #define RAYWHITE     (Color){ 245, 245, 245, 255 }
 ```
 
 **Function imports:**
+
 ```c
 RC_IMPORT("InitWindow")
 void InitWindow(int width, int height, const char * title);
@@ -151,6 +159,7 @@ npm run codegen:cart
 ```
 
 Or generate all files:
+
 ```bash
 npm run codegen
 ```
@@ -176,6 +185,7 @@ Generates `carts/c/js/raycart_bindings.c` from `raylib_api.json`. This creates Q
 ### Key patterns
 
 **Type converters for primitives:**
+
 ```c
 static JSValue i32_to_js(int32_t value) {
   return JS_NewInt32(ctx, value);
@@ -189,6 +199,7 @@ static int32_t i32_from_js(JSValue val) {
 ```
 
 **Type converters for structs:**
+
 ```c
 static JSValue color_to_js(Color value) {
   JSValue obj = JS_NewObject(ctx);
@@ -212,6 +223,7 @@ static Color color_from_js(JSValue obj) {
 ```
 
 **Function wrappers:**
+
 ```c
 // Void return
 static JSValue js_ClearBackground(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
@@ -231,6 +243,7 @@ static JSValue js_GetColor(JSContext *ctx, JSValueConst this_val, int argc, JSVa
 ```
 
 **Exposing to JavaScript:**
+
 ```c
 void expose_things_to_js() {
   // Color constants
@@ -254,6 +267,7 @@ npm run codegen:quickjs
 ### Excluded functions
 
 74 functions are excluded (463 of 537 total functions are included):
+
 - **Memory management** - `MemAlloc`, `MemFree`, `MemRealloc`
 - **Callback functions** - Cannot pass functions across WASM boundary
   - `SetTraceLogCallback`, `SetLoadFileDataCallback`, `SetSaveFileDataCallback`
@@ -287,11 +301,11 @@ This allows the cart's JavaScript code to call raylib functions directly:
 ```javascript
 // main.js
 export function CartInit() {
-  InitWindow(800, 450, "QuickJS Cart");
+  InitWindow(800, 450, 'QuickJS Cart')
 }
 
 export function CartUpdate() {
-  ClearBackground(RAYWHITE);
-  DrawText("Hello from JavaScript!", 190, 200, 20, LIGHTGRAY);
+  ClearBackground(RAYWHITE)
+  DrawText('Hello from JavaScript!', 190, 200, 20, LIGHTGRAY)
 }
 ```

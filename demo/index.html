@@ -33,32 +33,30 @@
     }
   </script>
   <script type="module">
-    import WasiPreview1 from "@easywasm/wasi";
-    import fflatefs from "./fflatefs.js";
-    import wasmLoader from "./raycart.mjs";
+    import WasiPreview1 from '@easywasm/wasi'
+    import fflatefs from './fflatefs.js'
+    import wasmLoader from './raycart.mjs'
 
     // Takes a zip-file with main.wasm and loads it with raylib imports
     // set any emscripten-options you want in options
     // arguments/preRun will merge
     async function loadCart(zipFile, options = {}) {
-      const zipBytes = new Uint8Array(
-        await fetch(zipFile).then((r) => r.arrayBuffer()),
-      );
-      const fs = await fflatefs(zipBytes);
+      const zipBytes = new Uint8Array(await fetch(zipFile).then((r) => r.arrayBuffer()))
+      const fs = await fflatefs(zipBytes)
       return wasmLoader({
         ...options,
         arguments: options?.arguments || [zipFile],
         preRun(mod) {
-          mod.FS.writeFile(zipFile, zipBytes);
-          mod.wasi_snapshot_preview1 = new WasiPreview1({ fs });
-          options?.preRun && options.preRun(mod);
-        },
-      });
+          mod.FS.writeFile(zipFile, zipBytes)
+          mod.wasi_snapshot_preview1 = new WasiPreview1({ fs })
+          options?.preRun && options.preRun(mod)
+        }
+      })
     }
 
-    const canvas = document.getElementById("canvas");
+    const canvas = document.getElementById('canvas')
     // const host = await loadCart("core_basic_window_c.zip", { canvas });
     // const host = await loadCart("core_basic_window_js.zip", { canvas });
-    const host = await loadCart("textures_logo_c.zip", { canvas });
+    const host = await loadCart('textures_logo_c.zip', { canvas })
   </script>
 </html>
