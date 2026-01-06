@@ -371,7 +371,7 @@ const output = generateHostWeb()
 writeFileSync(join(__dirname, '../host/host_web.c'), output)
 writeFileSync(join(__dirname, '../host/web_exports.txt'), exportsContent)
 
-console.log('\nGenerated host/host_web.c')
+console.log('Generated host/host_web.c')
 console.log(`  Struct helpers:    ${getUsedStructs().length}`)
 console.log(`  Functions:         ${totalFunctions - excludedFunctions.length}/${totalFunctions}`)
 if (excludedFunctions.length > 0) {
@@ -380,3 +380,4 @@ if (excludedFunctions.length > 0) {
 
 console.log('\nGenerated host/web_exports.txt')
 console.log(`  Exported symbols:  ${sortedExports.length}`)
+console.log('')

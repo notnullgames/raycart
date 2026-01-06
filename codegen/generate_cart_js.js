@@ -396,7 +396,7 @@ const excludedFunctions = api.functions.filter((f) => shouldExcludeFunction(f))
 
 // Write the file
 writeFileSync(join(__dirname, '../carts/c/js/raycart_bindings.c'), output)
-console.log(`\nGenerated carts/c/js/raycart_bindings.c`)
+console.log(`Generated carts/c/js/raycart_bindings.c`)
 console.log(`  Struct converters: ${usedStructs.length}`)
 console.log(`  Color constants:   ${api.defines.filter((d) => d.type === 'COLOR').length}`)
 console.log(`  Enum values:       ${api.enums.reduce((sum, e) => sum + e.values.length, 0)}`)
@@ -404,3 +404,5 @@ console.log(`  Functions:         ${filteredFunctions.length}/${totalFunctions}`
 if (excludedFunctions.length > 0) {
   console.log(`  Excluded:          ${excludedFunctions.map((f) => f.name).join(', ')}`)
 }
+
+console.log('')
