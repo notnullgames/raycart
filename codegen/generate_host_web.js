@@ -326,11 +326,15 @@ ${functionBindings}
 });
 
 
- EM_JS(bool, CartUpdate, (), {
+EM_JS(bool, CartUpdate, (), {
     Module._BeginDrawing();
     Module?.cart?.CartUpdate && Module.cart.CartUpdate();
     Module._EndDrawing();
     return true;
+});
+
+EM_JS(void, CartClose, (), {
+    Module?.cart?.CartClose && Module.cart.CartClose();
 });
 
 #endif

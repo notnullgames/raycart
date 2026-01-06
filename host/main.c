@@ -6,7 +6,7 @@
 // these are implemented for each host-type
 extern bool CartInit(char *wasmBuffer, int bytesRead);
 extern bool CartUpdate();
-
+extern void CartClose();
 
 int main(int argc, char *argv[]) {
     if (argc < 2) {
@@ -55,6 +55,7 @@ int main(int argc, char *argv[]) {
         while (!WindowShouldClose() && CartUpdate()) {}
     }
 
+    CartClose();
     CloseWindow();
     PHYSFS_deinit();
 
