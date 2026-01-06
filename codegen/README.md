@@ -25,7 +25,6 @@ const functionsToExclude = [
 
 - **PhysFS**: Uses, for example, `LoadTextureFromPhysFS` instead of `LoadTexture` to load from the PhysFS virtual filesystem
 - **Struct returns**: WebAssembly functions that return structs receive a result pointer as the first parameter
-- **Type aliases**: `Texture2D` is an alias for `Texture`, handled automatically
 
 ## generate_host_native.js
 
