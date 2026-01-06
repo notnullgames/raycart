@@ -1,40 +1,42 @@
 #!/usr/bin/env node
-import { readFileSync, writeFileSync } from 'fs';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
+import { readFileSync, writeFileSync } from "fs";
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const api = JSON.parse(readFileSync(join(__dirname, 'raylib_api.json'), 'utf8'));
+const api = JSON.parse(
+  readFileSync(join(__dirname, "raylib_api.json"), "utf8"),
+);
 
 // Type size mapping
 const typeSizes = {
-  'char': 1,
-  'unsigned char': 1,
-  'short': 2,
-  'unsigned short': 2,
-  'int': 4,
-  'unsigned int': 4,
-  'long': 4,
-  'unsigned long': 4,
-  'float': 4,
-  'double': 8,
-  'void *': 4, // pointer size in wasm32
+  char: 1,
+  "unsigned char": 1,
+  short: 2,
+  "unsigned short": 2,
+  int: 4,
+  "unsigned int": 4,
+  long: 4,
+  "unsigned long": 4,
+  float: 4,
+  double: 8,
+  "void *": 4, // pointer size in wasm32
 };
 
 // Calculate struct size
 function getStructSize(structName) {
   const resolved = resolveAlias(structName);
-  const struct = api.structs.find(s => s.name === resolved);
+  const struct = api.structs.find((s) => s.name === resolved);
   if (!struct) return 0;
 
   let size = 0;
   for (const field of struct.fields) {
-    const fieldType = field.type.replace(/\s+/g, ' ').trim();
+    const fieldType = field.type.replace(/\s+/g, " ").trim();
     if (typeSizes[fieldType]) {
       size += typeSizes[fieldType];
-    } else if (fieldType.includes('*')) {
+    } else if (fieldType.includes("*")) {
       size += 4; // pointer
     } else {
       // Nested struct
@@ -46,31 +48,43 @@ function getStructSize(structName) {
 
 // Resolve type aliases
 function resolveAlias(type) {
-  const cleanType = type.replace(/\s+/g, ' ').replace(/const\s+/, '').replace(/\s*\*/, '').trim();
-  const alias = api.aliases?.find(a => a.name === cleanType);
+  const cleanType = type
+    .replace(/\s+/g, " ")
+    .replace(/const\s+/, "")
+    .replace(/\s*\*/, "")
+    .trim();
+  const alias = api.aliases?.find((a) => a.name === cleanType);
   return alias ? alias.type : cleanType;
 }
 
 // Check if type is a struct
 function isStruct(type) {
-  const cleanType = type.replace(/\s+/g, ' ').replace(/const\s+/, '').replace(/\s*\*/, '').trim();
+  const cleanType = type
+    .replace(/\s+/g, " ")
+    .replace(/const\s+/, "")
+    .replace(/\s*\*/, "")
+    .trim();
   const resolved = resolveAlias(cleanType);
-  return api.structs.some(s => s.name === resolved);
+  return api.structs.some((s) => s.name === resolved);
 }
 
 // Check if type is a string
 function isString(type) {
-  return type.includes('char *') || type.includes('char*');
+  return type.includes("char *") || type.includes("char*");
 }
 
 // Check if type is a pointer
 function isPointer(type) {
-  return type.includes('*');
+  return type.includes("*");
 }
 
 // Get clean type name for helper function
 function getTypeName(type) {
-  const cleanType = type.replace(/\s+/g, ' ').replace(/const\s+/, '').replace(/\s*\*/, '').trim();
+  const cleanType = type
+    .replace(/\s+/g, " ")
+    .replace(/const\s+/, "")
+    .replace(/\s*\*/, "")
+    .trim();
   return resolveAlias(cleanType);
 }
 
@@ -107,8 +121,8 @@ function generateFunction(func) {
   const returnsStruct = isStruct(func.returnType);
 
   // Build parameter list
-  const jsParams = returnsStruct ? ['resultPtr'] : [];
-  jsParams.push(...params.map(p => p.name));
+  const jsParams = returnsStruct ? ["resultPtr"] : [];
+  jsParams.push(...params.map((p) => p.name));
 
   // Build function body
   const lines = [];
@@ -127,7 +141,9 @@ function generateFunction(func) {
     } else if (isStruct(param.type) && !isPointer(param.type)) {
       // Struct passed by value - copy from cart to host
       const helperName = `cart${getTypeName(param.type)}`;
-      lines.push(`            const ${hostName} = ${helperName}(${param.name});`);
+      lines.push(
+        `            const ${hostName} = ${helperName}(${param.name});`,
+      );
       hostParams.push(hostName);
       cleanupLines.push(`            Module._MemFree(${hostName});`);
     } else if (isStruct(param.type) && isPointer(param.type)) {
@@ -145,22 +161,26 @@ function generateFunction(func) {
     lines.push(`            const result_h = Module._MemAlloc(${size});`);
 
     // Special case for LoadTexture - use LoadTextureFromPhysFS
-    const funcName = func.name === 'LoadTexture' ? 'LoadTextureFromPhysFS' : func.name;
-    const callParams = hostParams.length > 0 ? `result_h, ${hostParams.join(', ')}` : 'result_h';
+    const funcName =
+      func.name === "LoadTexture" ? "LoadTextureFromPhysFS" : func.name;
+    const callParams =
+      hostParams.length > 0 ? `result_h, ${hostParams.join(", ")}` : "result_h";
     lines.push(`            Module._${funcName}(${callParams});`);
     lines.push(...cleanupLines);
     lines.push(`            copyHostToCart(result_h, resultPtr, ${size});`);
     lines.push(`            Module._MemFree(result_h);`);
-  } else if (func.returnType !== 'void') {
-    lines.push(`            const result = Module._${func.name}(${hostParams.join(', ')});`);
+  } else if (func.returnType !== "void") {
+    lines.push(
+      `            const result = Module._${func.name}(${hostParams.join(", ")});`,
+    );
     lines.push(...cleanupLines);
     lines.push(`            return result;`);
   } else {
-    lines.push(`            Module._${func.name}(${hostParams.join(', ')});`);
+    lines.push(`            Module._${func.name}(${hostParams.join(", ")});`);
     lines.push(...cleanupLines);
   }
 
-  return `        ${func.name}(${jsParams.join(', ')}) {\n${lines.join('\n')}\n        }`;
+  return `        ${func.name}(${jsParams.join(", ")}) {\n${lines.join("\n")}\n        }`;
 }
 
 // Generate the complete host_web.c file
@@ -168,39 +188,43 @@ function generateHostWeb() {
   const usedStructs = getUsedStructs();
 
   // Generate struct helpers
-  const structHelpers = usedStructs.map(structName => {
-    const size = getStructSize(structName);
-    const helperName = getHelperName(structName);
-    return `    const cart${structName} = ptr => copyFromCart(ptr, ${size});`;
-  }).join('\n');
+  const structHelpers = usedStructs
+    .map((structName) => {
+      const size = getStructSize(structName);
+      const helperName = getHelperName(structName);
+      return `    const cart${structName} = ptr => copyFromCart(ptr, ${size});`;
+    })
+    .join("\n");
 
-  const hostStructHelpers = usedStructs.map(structName => {
-    const size = getStructSize(structName);
-    const helperName = getHelperName(structName);
-    return `    const host${structName} = ptr => copyToCart(ptr, ${size});`;
-  }).join('\n');
+  const hostStructHelpers = usedStructs
+    .map((structName) => {
+      const size = getStructSize(structName);
+      const helperName = getHelperName(structName);
+      return `    const host${structName} = ptr => copyToCart(ptr, ${size});`;
+    })
+    .join("\n");
 
   // Functions to exclude from the API (cart has its own or doesn't make sense to expose)
   const functionsToExclude = [
-    'MemAlloc',
-    'MemRealloc',
-    'MemFree',
+    "MemAlloc",
+    "MemRealloc",
+    "MemFree",
     // Callback functions are tricky to bridge, exclude for now
-    'SetTraceLogCallback',
-    'SetLoadFileDataCallback',
-    'SetSaveFileDataCallback',
-    'SetLoadFileTextCallback',
-    'SetSaveFileTextCallback',
-    'AttachAudioStreamProcessor',
-    'DetachAudioStreamProcessor',
-    'AttachAudioMixedProcessor',
-    'DetachAudioMixedProcessor',
+    "SetTraceLogCallback",
+    "SetLoadFileDataCallback",
+    "SetSaveFileDataCallback",
+    "SetLoadFileTextCallback",
+    "SetSaveFileTextCallback",
+    "AttachAudioStreamProcessor",
+    "DetachAudioStreamProcessor",
+    "AttachAudioMixedProcessor",
+    "DetachAudioMixedProcessor",
   ];
 
   const functionBindings = api.functions
-    .filter(f => !functionsToExclude.includes(f.name))
+    .filter((f) => !functionsToExclude.includes(f.name))
     .map(generateFunction)
-    .join(',\n\n');
+    .join(",\n\n");
 
   return `#ifdef EMSCRIPTEN
 
@@ -303,7 +327,38 @@ ${functionBindings}
 `;
 }
 
+// Functions to exclude (must match list inside generateHostWeb)
+const functionsToExclude = [
+  "MemAlloc",
+  "MemRealloc",
+  "MemFree",
+  "SetTraceLogCallback",
+  "SetLoadFileDataCallback",
+  "SetSaveFileDataCallback",
+  "SetLoadFileTextCallback",
+  "SetSaveFileTextCallback",
+  "AttachAudioStreamProcessor",
+  "DetachAudioStreamProcessor",
+  "AttachAudioMixedProcessor",
+  "DetachAudioMixedProcessor",
+];
+
+// Calculate excluded functions
+const totalFunctions = api.functions.length;
+const excludedFunctions = api.functions.filter((f) =>
+  functionsToExclude.includes(f.name),
+);
+
 // Write the generated file
 const output = generateHostWeb();
-writeFileSync(join(__dirname, '../host/host_web.c'), output);
-console.log('Generated host/host_web.c');
+writeFileSync(join(__dirname, "../host/host_web.c"), output);
+console.log("\nGenerated host/host_web.c");
+console.log(`  Struct helpers:    ${getUsedStructs().length}`);
+console.log(
+  `  Functions:         ${totalFunctions - excludedFunctions.length}/${totalFunctions}`,
+);
+if (excludedFunctions.length > 0) {
+  console.log(
+    `  Excluded:          ${excludedFunctions.map((f) => f.name).join(", ")}`,
+  );
+}
