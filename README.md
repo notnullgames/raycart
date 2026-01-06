@@ -65,7 +65,7 @@ npm run codegen
 
 ### web
 
-Have a look at [index.html](demo/index.hml) for how to use it in your own web-project. At some point I will publish it on CDNs and add a web-bundle to CI to make it a bit easier to integrate. If you have emscritpen installed, you can just run `npm start` to see it, locally.
+Have a look at [index.html](demo/index.html) for how to use it in your own web-project. At some point I will publish it on CDNs and add a web-bundle to CI to make it a bit easier to integrate. If you have emscritpen installed, you can just run `npm start` to see it, locally.
 
 ### native
 
