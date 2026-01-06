@@ -85,4 +85,4 @@ You can also use the native runtime (without a browser) like this:
 ## thanks
 
 - obviously, raylib is awesome, and the community is really helpful
-- [zozlib.js](https://github.com/tsoding/zozlib.js) has some great ideas about non-emscripten raylib stuff
+- [zozlib.js](https://github.com/tsoding/zozlib.js) has some great ideas about non-emscripten raylib stuff. I didn't use this directly, but I like their style, and it provides a nice browser-native implementation of the same raylib functions.
