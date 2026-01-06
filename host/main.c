@@ -6,7 +6,16 @@
 // these are implemented for each host-type
 extern bool CartInit(char *wasmBuffer, int bytesRead);
 extern bool CartUpdate();
+extern void CartClose();
 
+#ifdef EMSCRIPTEN
+#include "emscripten.h"
+void CartUpdateWrapper() {
+    if (!CartUpdate()) {
+        emscripten_cancel_main_loop();
+    }
+}
+#endif
 
 int main(int argc, char *argv[]) {
     if (argc < 2) {
@@ -52,9 +61,15 @@ int main(int argc, char *argv[]) {
     MemFree(wasmBuffer);
     
     if (r) {
+        // WindowShouldClose works on emscripten too (via asyncify) but this is a bit lighter 
+        #ifndef EMSCRIPTEN
         while (!WindowShouldClose() && CartUpdate()) {}
+        #else
+        emscripten_set_main_loop(CartUpdateWrapper, 60, true);
+        #endif
     }
 
+    CartClose();
     CloseWindow();
     PHYSFS_deinit();
 

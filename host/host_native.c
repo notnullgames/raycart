@@ -13,6 +13,7 @@ static wasm_exec_env_t exec_env = NULL;
 
 static wasm_function_inst_t cart_callback_init = NULL;
 static wasm_function_inst_t cart_callback_update = NULL;
+static wasm_function_inst_t cart_callback_close = NULL;
 
 bool CartInit(char *wasmBuffer, int bytesRead) {
     // TODO: add stuff from https://github.com/notnullgames/null0/blob/main/host/src/cart_wamr.c
@@ -28,6 +29,10 @@ bool CartUpdate() {
     DrawText("Congrats! You created your first native window!", 190, 200, 20, LIGHTGRAY);
     EndDrawing();
     return true;
+}
+
+void CartClose() {
+    // TODO: call cart_callback_close()
 }
 
 #endif

@@ -76,7 +76,8 @@ function generateAlias(alias) {
   return `typedef ${alias.type} ${alias.name};`
 }
 
-// Same blacklist as host_web
+// Same list as host_web
+// Functions to exclude from the API (cart has its own or doesn't make sense to expose)
 const functionsToExclude = [
   'MemAlloc',
   'MemRealloc',
@@ -86,11 +87,29 @@ const functionsToExclude = [
   'SetSaveFileDataCallback',
   'SetLoadFileTextCallback',
   'SetSaveFileTextCallback',
+  'SetAudioStreamCallback',
   'AttachAudioStreamProcessor',
   'DetachAudioStreamProcessor',
   'AttachAudioMixedProcessor',
   'DetachAudioMixedProcessor',
-  'SetAudioStreamCallback' // Uses AudioCallback type
+
+  // Functions not available in this raylib version
+  'GetClipboardImage',
+  'FileRename',
+  'FileRemove',
+  'FileCopy',
+  'FileMove',
+  'FileTextReplace',
+  'FileTextFindIndex',
+  'ComputeSHA256',
+  'DrawLineDashed',
+  'DrawEllipseV',
+  'DrawEllipseLinesV',
+  'LoadTextLines',
+  'UnloadTextLines',
+  'TextRemoveSpaces',
+  'GetTextBetween',
+  'TextReplaceBetween'
 ]
 
 // Check if function uses callback types or variadic args

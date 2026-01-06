@@ -141,8 +141,41 @@ function generateStructFromJs(struct) {
   return lines.join('\n')
 }
 
-// Same blacklist as other generators
-const functionsToExclude = ['MemAlloc', 'MemRealloc', 'MemFree', 'SetTraceLogCallback', 'SetLoadFileDataCallback', 'SetSaveFileDataCallback', 'SetLoadFileTextCallback', 'SetSaveFileTextCallback', 'AttachAudioStreamProcessor', 'DetachAudioStreamProcessor', 'AttachAudioMixedProcessor', 'DetachAudioMixedProcessor', 'SetAudioStreamCallback']
+// Same list as host_web
+// Functions to exclude from the API (cart has its own or doesn't make sense to expose)
+const functionsToExclude = [
+  'MemAlloc',
+  'MemRealloc',
+  'MemFree',
+  'SetTraceLogCallback',
+  'SetLoadFileDataCallback',
+  'SetSaveFileDataCallback',
+  'SetLoadFileTextCallback',
+  'SetSaveFileTextCallback',
+  'SetAudioStreamCallback',
+  'AttachAudioStreamProcessor',
+  'DetachAudioStreamProcessor',
+  'AttachAudioMixedProcessor',
+  'DetachAudioMixedProcessor',
+
+  // Functions not available in this raylib version
+  'GetClipboardImage',
+  'FileRename',
+  'FileRemove',
+  'FileCopy',
+  'FileMove',
+  'FileTextReplace',
+  'FileTextFindIndex',
+  'ComputeSHA256',
+  'DrawLineDashed',
+  'DrawEllipseV',
+  'DrawEllipseLinesV',
+  'LoadTextLines',
+  'UnloadTextLines',
+  'TextRemoveSpaces',
+  'GetTextBetween',
+  'TextReplaceBetween'
+]
 
 // Check if function should be excluded
 function shouldExcludeFunction(func) {

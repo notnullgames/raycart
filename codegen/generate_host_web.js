@@ -123,10 +123,12 @@ const functionsToExclude = [
   'SetSaveFileDataCallback',
   'SetLoadFileTextCallback',
   'SetSaveFileTextCallback',
+  'SetAudioStreamCallback',
   'AttachAudioStreamProcessor',
   'DetachAudioStreamProcessor',
   'AttachAudioMixedProcessor',
   'DetachAudioMixedProcessor',
+
   // Functions not available in this raylib version
   'GetClipboardImage',
   'FileRename',
@@ -241,8 +243,7 @@ function generateHostWeb() {
 #include "raylib.h"
 #include "emscripten.h"
 
-// TODO: move this out to external JS file for better ergonomics (and codegen)
- EM_ASYNC_JS(bool, CartInit, (char *wasmBuffer, int bytesRead), {
+EM_ASYNC_JS(bool, CartInit, (char *wasmBuffer, int bytesRead), {
     if (!wasmBuffer || !bytesRead) {
         console.error('wasm byte-length is 0.');
         return false;
@@ -326,11 +327,15 @@ ${functionBindings}
 });
 
 
- EM_JS(bool, CartUpdate, (), {
+EM_JS(bool, CartUpdate, (), {
     Module._BeginDrawing();
     Module?.cart?.CartUpdate && Module.cart.CartUpdate();
     Module._EndDrawing();
     return true;
+});
+
+EM_JS(void, CartClose, (), {
+    Module?.cart?.CartClose && Module.cart.CartClose();
 });
 
 #endif
@@ -344,16 +349,26 @@ const excludedFunctions = api.functions.filter((f) => functionsToExclude.include
 // Generate web exports list
 const exports = new Set()
 
-// Essential functions
+// Functions that are used internally, but not exposed to cart
 exports.add('_main')
 exports.add('_MemAlloc')
 exports.add('_MemFree')
-exports.add('_BeginDrawing')
-exports.add('_EndDrawing')
 
-// Special PhysFS texture loader
+// raylib-physfs calls that will be used to replace regular functions
+exports.add('_DirectoryExistsInPhysFS')
+exports.add('_FileExistsInPhysFS')
+exports.add('_GetFileModTimeFromPhysFS')
+exports.add('_LoadDirectoryFilesFromPhysFS')
+exports.add('_LoadFileDataFromPhysFS')
+exports.add('_LoadFileTextFromPhysFS')
+exports.add('_LoadFontFromPhysFS')
+exports.add('_LoadImageFromPhysFS')
+exports.add('_LoadMusicStreamFromPhysFS')
+exports.add('_LoadShaderFromPhysFS')
 exports.add('_LoadTextureFromPhysFS')
-exports.add('_UnloadTexture')
+exports.add('_LoadWaveFromPhysFS')
+exports.add('_SaveFileDataToPhysFS')
+exports.add('_SaveFileTextToPhysFS')
 
 // All non-excluded raylib functions
 for (const func of api.functions) {

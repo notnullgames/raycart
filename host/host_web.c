@@ -3,8 +3,7 @@
 #include "raylib.h"
 #include "emscripten.h"
 
-// TODO: move this out to external JS file for better ergonomics (and codegen)
- EM_ASYNC_JS(bool, CartInit, (char *wasmBuffer, int bytesRead), {
+EM_ASYNC_JS(bool, CartInit, (char *wasmBuffer, int bytesRead), {
     if (!wasmBuffer || !bytesRead) {
         console.error('wasm byte-length is 0.');
         return false;
@@ -4232,12 +4231,6 @@
 
         SetAudioStreamBufferSizeDefault(size) {
             Module._SetAudioStreamBufferSizeDefault(size);
-        },
-
-        SetAudioStreamCallback(stream, callback) {
-            const stream_h = cartAudioStream(stream);
-            Module._SetAudioStreamCallback(stream_h, callback);
-            Module._MemFree(stream_h);
         }
     };
 
@@ -4253,11 +4246,15 @@
 });
 
 
- EM_JS(bool, CartUpdate, (), {
+EM_JS(bool, CartUpdate, (), {
     Module._BeginDrawing();
     Module?.cart?.CartUpdate && Module.cart.CartUpdate();
     Module._EndDrawing();
     return true;
+});
+
+EM_JS(void, CartClose, (), {
+    Module?.cart?.CartClose && Module.cart.CartClose();
 });
 
 #endif

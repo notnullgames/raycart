@@ -7,8 +7,13 @@ IF(POLICY CMP0135)
   SET(CMAKE_POLICY_DEFAULT_CMP0135 NEW)
 ENDIF()
 
-ADD_SUBDIRECTORY(host)
+option(BUILD_HOST "Build host target" ON)
+option(BUILD_CARTS "Build carts target" ON)
 
-IF (NOT EMSCRIPTEN)
-  ADD_SUBDIRECTORY(carts)
-ENDIF()
+if(BUILD_HOST)
+  add_subdirectory(host)
+endif()
+
+if(BUILD_CARTS AND NOT EMSCRIPTEN)
+  add_subdirectory(carts)
+endif()
