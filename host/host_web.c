@@ -25,7 +25,7 @@ EM_ASYNC_JS(bool, CartInit, (char *wasmBuffer, int bytesRead), {
     // this allocates, so make sure to MemFree it
     // TODO "scratch space" mem would be more efficient & might be easier to work with
     const copyFromCart = (ptr, size) => {
-        const cartMemory = new Uint8Array(cart.memory.buffer);
+        const cartMemory = new Uint8Array(Module.cart.memory.buffer);
         const hostPtr = Module._MemAlloc(size);
         Module.HEAPU8.set(cartMemory.subarray(ptr, ptr + size), hostPtr);
         return hostPtr;
@@ -33,16 +33,31 @@ EM_ASYNC_JS(bool, CartInit, (char *wasmBuffer, int bytesRead), {
 
     const copyToCart = (hostPtr, size) => {
         const hostMemory = Module.HEAPU8;
-        const cartPtr = cart.malloc(size);
-        const cartMemory = new Uint8Array(cart.memory.buffer);
+        const cartPtr = Module.cart.malloc(size);
+        const cartMemory = new Uint8Array(Module.cart.memory.buffer);
         cartMemory.set(hostMemory.subarray(hostPtr, hostPtr + size), cartPtr);
         return cartPtr;
     };
 
+    const copyHostToCart = (hostPtr, cartPtr, size) => {
+        const cartMemory = new Uint8Array(Module.cart.memory.buffer);
+        const hostMemory = Module.HEAPU8;
+        cartMemory.set(hostMemory.subarray(hostPtr, hostPtr + size), cartPtr);
+    };
+
     const cartStringLen = ptr => {
-        const cartMemory = new Uint8Array(cart.memory.buffer, ptr, 1024);
+        const cartMemory = new Uint8Array(Module.cart.memory.buffer, ptr, 1024);
         let strlen = 0;
         while (cartMemory[strlen] !== 0 && strlen < cartMemory.length) {
+            strlen++;
+        }
+        return strlen;
+    };
+
+    const hostStringLen = ptr => {
+        const hostMemory = Module.HEAPU8;
+        let strlen = 0;
+        while (hostMemory[ptr + strlen] !== 0 && strlen < 1024) {
             strlen++;
         }
         return strlen;
@@ -55,7 +70,7 @@ EM_ASYNC_JS(bool, CartInit, (char *wasmBuffer, int bytesRead), {
 
 
     // copy from host to cart
-    const hostString = (ptr) => copyToCart(ptr, strlen(ptr) + 1);
+    const hostString = (ptr) => copyToCart(ptr, hostStringLen(ptr) + 1);
     const hostColor = ptr => copyToCart(ptr, 4);
     const hostTexture = ptr => copyToCart(ptr, 20);
 
@@ -82,11 +97,13 @@ EM_ASYNC_JS(bool, CartInit, (char *wasmBuffer, int bytesRead), {
             Module._MemFree(color_h);
         },
 
-        LoadTexture(fileName) {
+        LoadTexture(resultPtr, fileName) {
             const fileName_h = cartString(fileName);
-            const r = Module._LoadTextureFromPhysFS(fileName_h);
+            const texture_h = Module._MemAlloc(20);
+            Module._LoadTextureFromPhysFS(texture_h, fileName_h);
             Module._MemFree(fileName_h);
-            return hostTexture(r);        
+            copyHostToCart(texture_h, resultPtr, 20);
+            Module._MemFree(texture_h);
         },
 
         UnloadTexture(texture){
