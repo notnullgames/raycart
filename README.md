@@ -81,6 +81,7 @@ You can also use the native runtime (without a browser) like this:
 - live-reloading web-build
 - live-reloading native build
 - Don't manage `BeginDrawing`/`EndDrawing` (require user to call these) so you can do other stuff in your loop (textures, etc)
+- self-running (like love2d) and run a directory (instead of zip)
 
 ## thanks
 
