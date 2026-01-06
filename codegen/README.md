@@ -4,9 +4,100 @@ This directory contains code generators for automatically creating bindings betw
 
 ## Scripts
 
+- **generate_host_native.js** - Generates `host/host_native.c` (WAMR bindings for native wasm-host)
 - **generate_host_web.js** - Generates `host/host_web.c` (JavaScript bindings for Emscripten)
-- **generate_raycart_h.js** - Generates import declarations for `carts/c/raycart.h` (C header for carts)
-- **generate_quickjs.js** - Generates `carts/c/js/raycart_bindings.c` (QuickJS bindings for JS carts)
+- **generate_cart_c.js** - Generates import declarations for `carts/c/raycart.h` (C header for carts)
+- **generate_cart_js.js** - Generates `carts/c/js/raycart_bindings.c` (QuickJS bindings for JS carts)
+
+### Customization
+
+By default, all raylib functions are exposed except those in the `functionsToExclude` list, for each generator. To exclude additional functions, edit the list:
+
+```javascript
+const functionsToExclude = [
+  'MemAlloc', // Cart has its own memory management
+  'MemFree'
+  // Add more function names to exclude here
+]
+```
+
+### Special cases
+
+- **PhysFS**: Uses, for example, `LoadTextureFromPhysFS` instead of `LoadTexture` to load from the PhysFS virtual filesystem
+- **Struct returns**: WebAssembly functions that return structs receive a result pointer as the first parameter
+- **Type aliases**: `Texture2D` is an alias for `Texture`, handled automatically
+
+## generate_host_native.js
+
+Generates `host/host_native.c` from `raylib_api.json`. This creates C bindings that bridge between the cart WASM module and the host's native [WAMR](https://github.com/bytecodealliance/wasm-micro-runtime) raylib.
+
+### How it works
+
+1. **Reads raylib_api.json** - Contains struct definitions, function signatures, and type information
+2. **Resolves type aliases** - Handles types like `Texture2D` (alias of `Texture`)
+3. **Generates function bindings** - For each raylib function:
+   - Detects if it returns a struct (adds `resultPtr` as first parameter)
+   - Handles string parameters (directly, as WAMR copies them)
+   - Handles struct parameters (directly as a pointer, as WAMR copies them)
+   - Handles primitives (passes directly)
+
+### Key patterns
+
+**Functions returning void:**
+
+```c
+static void raycart_InitWindow(wasm_exec_env_t exec_env, int width, int height, const char * title) {
+    InitWindow(width, height, title);
+}
+
+// later
+{"InitWindow", raycart_InitWindow, "(ii$)"}, // params: int, int, string
+```
+
+**Functions returning scalar-types:**
+
+```c
+static bool raycart_IsWindowReady(wasm_exec_env_t exec_env) {
+    return IsWindowReady();
+}
+
+// later
+{"IsWindowReady", raycart_IsWindowReady, "()i"}, // no params, returns int
+```
+
+**Functions returning structs:**
+
+```c
+static void raycart_LoadTexture(wasm_exec_env_t exec_env, Texture2D* __result, const char * fileName) {
+    *__result = LoadTextureFromPhysFS(fileName);
+}
+
+// later
+{"LoadTexture", raycart_LoadTexture, "(*$)"}, // params: pointer, string
+```
+
+**Functions with struct parameters:**
+
+```c
+static void raycart_ClearBackground(wasm_exec_env_t exec_env, Color* color) {
+    ClearBackground(*color);
+}
+
+// later
+{"ClearBackground", raycart_ClearBackground, "(*)"}, // pointer
+```
+
+### Usage
+
+```bash
+npm run codegen:hostnative
+```
+
+Or generate all files:
+
+```bash
+npm run codegen
+```
 
 ## generate_host_web.js
 
@@ -62,34 +153,16 @@ ClearBackground(color) {
 ### Usage
 
 ```bash
+npm run codegen:hostweb
+```
+
+Or generate all files:
+
+```bash
 npm run codegen
 ```
 
-Or directly:
-
-```bash
-node codegen/generate_host_web.js
-```
-
-### Customization
-
-By default, all raylib functions are exposed except those in the `functionsToExclude` list. To exclude additional functions, edit the list in `generate_host_web.js`:
-
-```javascript
-const functionsToExclude = [
-  'MemAlloc', // Cart has its own memory management
-  'MemFree'
-  // Add more function names to exclude here
-]
-```
-
-### Special cases
-
-- **LoadTexture**: Uses `LoadTextureFromPhysFS` instead of `LoadTexture` to load from the PhysFS virtual filesystem
-- **Struct returns**: WebAssembly functions that return structs receive a result pointer as the first parameter
-- **Type aliases**: `Texture2D` is an alias for `Texture`, handled automatically
-
-## generate_raycart_h.js
+## generate_cart_c.js
 
 Generates the complete `carts/c/raycart.h` header file from `raylib_api.json`. This creates all type definitions, enums, constants, and function prototypes that carts need to use raylib.
 
@@ -164,9 +237,11 @@ Or generate all files:
 npm run codegen
 ```
 
-## generate_quickjs.js
+## generate_cart_js.js
 
 Generates `carts/c/js/raycart_bindings.c` from `raylib_api.json`. This creates QuickJS C bindings that expose the raylib API to JavaScript code running inside a QuickJS cart.
+
+This was my first interpretor cart, and it uses a C cart, but then exposes everything to a QuickJS interpretor. You can think of this as an example for other interpretors (python, etc.)
 
 ### How it works
 
@@ -253,8 +328,7 @@ void expose_things_to_js() {
   JS_SetPropertyStr(ctx, global, "FLAG_VSYNC_HINT", i32_to_js(FLAG_VSYNC_HINT));
 
   // Functions
-  JS_SetPropertyStr(ctx, global, "InitWindow",
-    JS_NewCFunction(ctx, js_InitWindow, "InitWindow", 3));
+  JS_SetPropertyStr(ctx, global, "InitWindow", JS_NewCFunction(ctx, js_InitWindow, "InitWindow", 3));
 }
 ```
 
