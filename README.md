@@ -30,7 +30,48 @@ I am also working on these, but they are not as complete:
 
 ## usage
 
-You can see available commands with `npm run`, but the quickest way to get started is `npm start`.
+```sh
+# build carts & web runtime, and start a local reloading web-server
+npm start
+
+# delete any built files
+npm run clean
+
+# build carts and web/native runtime
+npm run build
+
+# build only native runtime
+npm run build:native
+
+# build only carts
+npm run build:carts
+
+# build both carts & native host
+npm run build:nativefull
+
+# build only web runtime
+npm run build:web
+
+# format your JS code
+npm run format
+
+# generate all the source-files I generate from the raylib JSON
+# be careful if you have modified anything
+# this is not really needed for most people
+npm run codegen
+```
+
+### web
+
+Have a look at [index.html](demo/index.hml) for how to use it in your own web-project. At some point I will publish it on CDNs and add a web-bundle to CI to make it a bit easier to integrate. If you have emscritpen installed, you can just run `npm start` to see it, locally.
+
+### native
+
+You can also use the native runtime (without a browser) like this:
+
+```sh
+./build/host/raycart ./build/carts/
+```
 
 ## todo
 
