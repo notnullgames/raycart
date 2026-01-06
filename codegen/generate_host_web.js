@@ -113,6 +113,24 @@ function getUsedStructs() {
   return Array.from(used)
 }
 
+// Map raylib functions to their PhysFS equivalents
+const physFSFunctionMap = {
+  DirectoryExists: 'DirectoryExistsInPhysFS',
+  FileExists: 'FileExistsInPhysFS',
+  GetFileModTime: 'GetFileModTimeFromPhysFS',
+  LoadDirectoryFiles: 'LoadDirectoryFilesFromPhysFS',
+  LoadFileData: 'LoadFileDataFromPhysFS',
+  LoadFileText: 'LoadFileTextFromPhysFS',
+  LoadFont: 'LoadFontFromPhysFS',
+  LoadImage: 'LoadImageFromPhysFS',
+  LoadMusicStream: 'LoadMusicStreamFromPhysFS',
+  LoadShader: 'LoadShaderFromPhysFS',
+  LoadTexture: 'LoadTextureFromPhysFS',
+  LoadWave: 'LoadWaveFromPhysFS',
+  SaveFileData: 'SaveFileDataToPhysFS',
+  SaveFileText: 'SaveFileTextToPhysFS'
+}
+
 // Functions to exclude from the API (cart has its own or doesn't make sense to expose)
 const functionsToExclude = [
   'MemAlloc',
@@ -186,24 +204,24 @@ function generateFunction(func) {
     }
   }
 
+  // Use PhysFS version of function if available
+  const funcName = physFSFunctionMap[func.name] || func.name
+
   // Handle function call based on return type
   if (returnsStruct) {
     const size = getStructSize(func.returnType)
     lines.push(`            const result_h = Module._MemAlloc(${size});`)
-
-    // Special case for LoadTexture - use LoadTextureFromPhysFS
-    const funcName = func.name === 'LoadTexture' ? 'LoadTextureFromPhysFS' : func.name
     const callParams = hostParams.length > 0 ? `result_h, ${hostParams.join(', ')}` : 'result_h'
     lines.push(`            Module._${funcName}(${callParams});`)
     lines.push(...cleanupLines)
     lines.push(`            copyHostToCart(result_h, resultPtr, ${size});`)
     lines.push(`            Module._MemFree(result_h);`)
   } else if (func.returnType !== 'void') {
-    lines.push(`            const result = Module._${func.name}(${hostParams.join(', ')});`)
+    lines.push(`            const result = Module._${funcName}(${hostParams.join(', ')});`)
     lines.push(...cleanupLines)
     lines.push(`            return result;`)
   } else {
-    lines.push(`            Module._${func.name}(${hostParams.join(', ')});`)
+    lines.push(`            Module._${funcName}(${hostParams.join(', ')});`)
     lines.push(...cleanupLines)
   }
 
@@ -355,20 +373,9 @@ exports.add('_MemAlloc')
 exports.add('_MemFree')
 
 // raylib-physfs calls that will be used to replace regular functions
-exports.add('_DirectoryExistsInPhysFS')
-exports.add('_FileExistsInPhysFS')
-exports.add('_GetFileModTimeFromPhysFS')
-exports.add('_LoadDirectoryFilesFromPhysFS')
-exports.add('_LoadFileDataFromPhysFS')
-exports.add('_LoadFileTextFromPhysFS')
-exports.add('_LoadFontFromPhysFS')
-exports.add('_LoadImageFromPhysFS')
-exports.add('_LoadMusicStreamFromPhysFS')
-exports.add('_LoadShaderFromPhysFS')
-exports.add('_LoadTextureFromPhysFS')
-exports.add('_LoadWaveFromPhysFS')
-exports.add('_SaveFileDataToPhysFS')
-exports.add('_SaveFileTextToPhysFS')
+for (const physFSFunc of Object.values(physFSFunctionMap)) {
+  exports.add(`_${physFSFunc}`)
+}
 
 // All non-excluded raylib functions
 for (const func of api.functions) {

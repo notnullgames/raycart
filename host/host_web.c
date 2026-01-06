@@ -489,7 +489,7 @@ EM_ASYNC_JS(bool, CartInit, (char *wasmBuffer, int bytesRead), {
             const vsFileName_h = cartString(vsFileName);
             const fsFileName_h = cartString(fsFileName);
             const result_h = Module._MemAlloc(8);
-            Module._LoadShader(result_h, vsFileName_h, fsFileName_h);
+            Module._LoadShaderFromPhysFS(result_h, vsFileName_h, fsFileName_h);
             Module._MemFree(vsFileName_h);
             Module._MemFree(fsFileName_h);
             copyHostToCart(result_h, resultPtr, 8);
@@ -727,7 +727,7 @@ EM_ASYNC_JS(bool, CartInit, (char *wasmBuffer, int bytesRead), {
 
         LoadFileData(fileName, dataSize) {
             const fileName_h = cartString(fileName);
-            const result = Module._LoadFileData(fileName_h, dataSize);
+            const result = Module._LoadFileDataFromPhysFS(fileName_h, dataSize);
             Module._MemFree(fileName_h);
             return result;
         },
@@ -740,7 +740,7 @@ EM_ASYNC_JS(bool, CartInit, (char *wasmBuffer, int bytesRead), {
 
         SaveFileData(fileName, data, dataSize) {
             const fileName_h = cartString(fileName);
-            const result = Module._SaveFileData(fileName_h, data, dataSize);
+            const result = Module._SaveFileDataToPhysFS(fileName_h, data, dataSize);
             Module._MemFree(fileName_h);
             return result;
         },
@@ -756,7 +756,7 @@ EM_ASYNC_JS(bool, CartInit, (char *wasmBuffer, int bytesRead), {
 
         LoadFileText(fileName) {
             const fileName_h = cartString(fileName);
-            const result = Module._LoadFileText(fileName_h);
+            const result = Module._LoadFileTextFromPhysFS(fileName_h);
             Module._MemFree(fileName_h);
             return result;
         },
@@ -770,7 +770,7 @@ EM_ASYNC_JS(bool, CartInit, (char *wasmBuffer, int bytesRead), {
         SaveFileText(fileName, text) {
             const fileName_h = cartString(fileName);
             const text_h = cartString(text);
-            const result = Module._SaveFileText(fileName_h, text_h);
+            const result = Module._SaveFileTextToPhysFS(fileName_h, text_h);
             Module._MemFree(fileName_h);
             Module._MemFree(text_h);
             return result;
@@ -778,14 +778,14 @@ EM_ASYNC_JS(bool, CartInit, (char *wasmBuffer, int bytesRead), {
 
         FileExists(fileName) {
             const fileName_h = cartString(fileName);
-            const result = Module._FileExists(fileName_h);
+            const result = Module._FileExistsInPhysFS(fileName_h);
             Module._MemFree(fileName_h);
             return result;
         },
 
         DirectoryExists(dirPath) {
             const dirPath_h = cartString(dirPath);
-            const result = Module._DirectoryExists(dirPath_h);
+            const result = Module._DirectoryExistsInPhysFS(dirPath_h);
             Module._MemFree(dirPath_h);
             return result;
         },
@@ -808,7 +808,7 @@ EM_ASYNC_JS(bool, CartInit, (char *wasmBuffer, int bytesRead), {
 
         GetFileModTime(fileName) {
             const fileName_h = cartString(fileName);
-            const result = Module._GetFileModTime(fileName_h);
+            const result = Module._GetFileModTimeFromPhysFS(fileName_h);
             Module._MemFree(fileName_h);
             return result;
         },
@@ -889,7 +889,7 @@ EM_ASYNC_JS(bool, CartInit, (char *wasmBuffer, int bytesRead), {
         LoadDirectoryFiles(resultPtr, dirPath) {
             const dirPath_h = cartString(dirPath);
             const result_h = Module._MemAlloc(12);
-            Module._LoadDirectoryFiles(result_h, dirPath_h);
+            Module._LoadDirectoryFilesFromPhysFS(result_h, dirPath_h);
             Module._MemFree(dirPath_h);
             copyHostToCart(result_h, resultPtr, 12);
             Module._MemFree(result_h);
@@ -1876,7 +1876,7 @@ EM_ASYNC_JS(bool, CartInit, (char *wasmBuffer, int bytesRead), {
         LoadImage(resultPtr, fileName) {
             const fileName_h = cartString(fileName);
             const result_h = Module._MemAlloc(20);
-            Module._LoadImage(result_h, fileName_h);
+            Module._LoadImageFromPhysFS(result_h, fileName_h);
             Module._MemFree(fileName_h);
             copyHostToCart(result_h, resultPtr, 20);
             Module._MemFree(result_h);
@@ -2778,7 +2778,7 @@ EM_ASYNC_JS(bool, CartInit, (char *wasmBuffer, int bytesRead), {
         LoadFont(resultPtr, fileName) {
             const fileName_h = cartString(fileName);
             const result_h = Module._MemAlloc(40);
-            Module._LoadFont(result_h, fileName_h);
+            Module._LoadFontFromPhysFS(result_h, fileName_h);
             Module._MemFree(fileName_h);
             copyHostToCart(result_h, resultPtr, 40);
             Module._MemFree(result_h);
@@ -3862,7 +3862,7 @@ EM_ASYNC_JS(bool, CartInit, (char *wasmBuffer, int bytesRead), {
         LoadWave(resultPtr, fileName) {
             const fileName_h = cartString(fileName);
             const result_h = Module._MemAlloc(20);
-            Module._LoadWave(result_h, fileName_h);
+            Module._LoadWaveFromPhysFS(result_h, fileName_h);
             Module._MemFree(fileName_h);
             copyHostToCart(result_h, resultPtr, 20);
             Module._MemFree(result_h);
@@ -4042,7 +4042,7 @@ EM_ASYNC_JS(bool, CartInit, (char *wasmBuffer, int bytesRead), {
         LoadMusicStream(resultPtr, fileName) {
             const fileName_h = cartString(fileName);
             const result_h = Module._MemAlloc(32);
-            Module._LoadMusicStream(result_h, fileName_h);
+            Module._LoadMusicStreamFromPhysFS(result_h, fileName_h);
             Module._MemFree(fileName_h);
             copyHostToCart(result_h, resultPtr, 32);
             Module._MemFree(result_h);
