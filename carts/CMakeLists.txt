@@ -158,6 +158,7 @@ function(BUILD_CART_AS name)
     add_dependencies(carts cart_as_${name})
 endfunction()
 
-BUILD_CART_C("basic_window")
+BUILD_CART_C("core_basic_window")
+BUILD_CART_C("textures_logo")
 
-BUILD_CART_JS("basic_window")
+BUILD_CART_JS("core_basic_window")

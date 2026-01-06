@@ -41,40 +41,40 @@ EM_ASYNC_JS(bool, CartInit, (char *wasmBuffer, int bytesRead), {
     };
 
     const copyStringFromCart = (ptr) => copyFromCart(ptr, cartStringLen(ptr) + 1);
-
-    const decoder = new TextDecoder();
-    const debugCartString = ptr => decoder.decode(new Uint8Array(cart.memory.buffer, ptr, cartStringLen(ptr)));
-
-    const debugCartColor = ptr => {
-        const [r, g, b, a] = new Uint8Array(cart.memory.buffer, ptr, 4);
-        return `{ r: ${r}, g: ${g}, b: ${b}, a: ${a} }`;
-    };
-
     const cartColor = ptr => copyFromCart(ptr, 4);
 
     // TODO: Generate this from host wasm exports
     const raycart = {
         InitWindow(width, height, title) {
-            // console.log(`CART called InitWindow(${width}, ${height}, "${debugCartString(title)}")`);
             const title_h = copyStringFromCart(title);
             Module._InitWindow(width, height, title_h);
             Module._MemFree(title_h);
         },
         
         ClearBackground(color) {
-            // console.log(`CART called ClearBackground(${debugCartColor(color)})`);
             const color_h = cartColor(color);
             Module._ClearBackground(color_h);
             Module._MemFree(color_h);
         },
         
         DrawText(text, posX, posY, fontSize, color) {
-            // console.log(`CART called DrawText("${debugCartString(text)}", ${posX}, ${posY}, ${fontSize}, ${debugCartColor(color)})`);
             const text_h = copyStringFromCart(text);
             const color_h = cartColor(color);
             Module._DrawText(text_h, posX, posY, fontSize, color_h);
             Module._MemFree(text_h);
             Module._MemFree(color_h);
+        },
+
+        LoadTexture(fileName) {
+            const fileName_h = copyStringFromCart(fileName);
+            // const r = LoadFileTextFromPhysFS(fileName_h)
+            Module._MemFree(fileName_h);            
+        },
+
+        UnloadTexture(texture){
+        },
+
+        DrawTexture(texture, posX, posY, tint){
         }
     };
 
