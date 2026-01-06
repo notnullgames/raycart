@@ -115,6 +115,39 @@ function getUsedStructs() {
   return Array.from(used);
 }
 
+// Functions to exclude from the API (cart has its own or doesn't make sense to expose)
+const functionsToExclude = [
+  "MemAlloc",
+  "MemRealloc",
+  "MemFree",
+  "SetTraceLogCallback",
+  "SetLoadFileDataCallback",
+  "SetSaveFileDataCallback",
+  "SetLoadFileTextCallback",
+  "SetSaveFileTextCallback",
+  "AttachAudioStreamProcessor",
+  "DetachAudioStreamProcessor",
+  "AttachAudioMixedProcessor",
+  "DetachAudioMixedProcessor",
+  // Functions not available in this raylib version
+  "GetClipboardImage",
+  "FileRename",
+  "FileRemove",
+  "FileCopy",
+  "FileMove",
+  "FileTextReplace",
+  "FileTextFindIndex",
+  "ComputeSHA256",
+  "DrawLineDashed",
+  "DrawEllipseV",
+  "DrawEllipseLinesV",
+  "LoadTextLines",
+  "UnloadTextLines",
+  "TextRemoveSpaces",
+  "GetTextBetween",
+  "TextReplaceBetween",
+];
+
 // Generate function binding
 function generateFunction(func) {
   const params = func.params || [];
@@ -204,22 +237,7 @@ function generateHostWeb() {
     })
     .join("\n");
 
-  // Functions to exclude from the API (cart has its own or doesn't make sense to expose)
-  const functionsToExclude = [
-    "MemAlloc",
-    "MemRealloc",
-    "MemFree",
-    // Callback functions are tricky to bridge, exclude for now
-    "SetTraceLogCallback",
-    "SetLoadFileDataCallback",
-    "SetSaveFileDataCallback",
-    "SetLoadFileTextCallback",
-    "SetSaveFileTextCallback",
-    "AttachAudioStreamProcessor",
-    "DetachAudioStreamProcessor",
-    "AttachAudioMixedProcessor",
-    "DetachAudioMixedProcessor",
-  ];
+  // Use the shared exclusion list defined at module level
 
   const functionBindings = api.functions
     .filter((f) => !functionsToExclude.includes(f.name))
@@ -327,31 +345,42 @@ ${functionBindings}
 `;
 }
 
-// Functions to exclude (must match list inside generateHostWeb)
-const functionsToExclude = [
-  "MemAlloc",
-  "MemRealloc",
-  "MemFree",
-  "SetTraceLogCallback",
-  "SetLoadFileDataCallback",
-  "SetSaveFileDataCallback",
-  "SetLoadFileTextCallback",
-  "SetSaveFileTextCallback",
-  "AttachAudioStreamProcessor",
-  "DetachAudioStreamProcessor",
-  "AttachAudioMixedProcessor",
-  "DetachAudioMixedProcessor",
-];
-
 // Calculate excluded functions
 const totalFunctions = api.functions.length;
 const excludedFunctions = api.functions.filter((f) =>
   functionsToExclude.includes(f.name),
 );
 
-// Write the generated file
+// Generate web exports list
+const exports = new Set();
+
+// Essential functions
+exports.add("_main");
+exports.add("_MemAlloc");
+exports.add("_MemFree");
+exports.add("_BeginDrawing");
+exports.add("_EndDrawing");
+
+// Special PhysFS texture loader
+exports.add("_LoadTextureFromPhysFS");
+exports.add("_UnloadTexture");
+
+// All non-excluded raylib functions
+for (const func of api.functions) {
+  if (!functionsToExclude.includes(func.name)) {
+    exports.add(`_${func.name}`);
+  }
+}
+
+// Sort and write exports
+const sortedExports = Array.from(exports).sort();
+const exportsContent = sortedExports.join("\n") + "\n";
+
+// Write the generated files
 const output = generateHostWeb();
 writeFileSync(join(__dirname, "../host/host_web.c"), output);
+writeFileSync(join(__dirname, "../host/web_exports.txt"), exportsContent);
+
 console.log("\nGenerated host/host_web.c");
 console.log(`  Struct helpers:    ${getUsedStructs().length}`);
 console.log(
@@ -362,3 +391,6 @@ if (excludedFunctions.length > 0) {
     `  Excluded:          ${excludedFunctions.map((f) => f.name).join(", ")}`,
   );
 }
+
+console.log("\nGenerated host/web_exports.txt");
+console.log(`  Exported symbols:  ${sortedExports.length}`);

@@ -357,13 +357,6 @@
             return result;
         },
 
-        GetClipboardImage(resultPtr) {
-            const result_h = Module._MemAlloc(20);
-            Module._GetClipboardImage(result_h);
-            copyHostToCart(result_h, resultPtr, 20);
-            Module._MemFree(result_h);
-        },
-
         EnableEventWaiting() {
             Module._EnableEventWaiting();
         },
@@ -784,60 +777,6 @@
             return result;
         },
 
-        FileRename(fileName, fileRename) {
-            const fileName_h = cartString(fileName);
-            const fileRename_h = cartString(fileRename);
-            const result = Module._FileRename(fileName_h, fileRename_h);
-            Module._MemFree(fileName_h);
-            Module._MemFree(fileRename_h);
-            return result;
-        },
-
-        FileRemove(fileName) {
-            const fileName_h = cartString(fileName);
-            const result = Module._FileRemove(fileName_h);
-            Module._MemFree(fileName_h);
-            return result;
-        },
-
-        FileCopy(srcPath, dstPath) {
-            const srcPath_h = cartString(srcPath);
-            const dstPath_h = cartString(dstPath);
-            const result = Module._FileCopy(srcPath_h, dstPath_h);
-            Module._MemFree(srcPath_h);
-            Module._MemFree(dstPath_h);
-            return result;
-        },
-
-        FileMove(srcPath, dstPath) {
-            const srcPath_h = cartString(srcPath);
-            const dstPath_h = cartString(dstPath);
-            const result = Module._FileMove(srcPath_h, dstPath_h);
-            Module._MemFree(srcPath_h);
-            Module._MemFree(dstPath_h);
-            return result;
-        },
-
-        FileTextReplace(fileName, search, replacement) {
-            const fileName_h = cartString(fileName);
-            const search_h = cartString(search);
-            const replacement_h = cartString(replacement);
-            const result = Module._FileTextReplace(fileName_h, search_h, replacement_h);
-            Module._MemFree(fileName_h);
-            Module._MemFree(search_h);
-            Module._MemFree(replacement_h);
-            return result;
-        },
-
-        FileTextFindIndex(fileName, search) {
-            const fileName_h = cartString(fileName);
-            const search_h = cartString(search);
-            const result = Module._FileTextFindIndex(fileName_h, search_h);
-            Module._MemFree(fileName_h);
-            Module._MemFree(search_h);
-            return result;
-        },
-
         FileExists(fileName) {
             const fileName_h = cartString(fileName);
             const result = Module._FileExists(fileName_h);
@@ -1037,13 +976,6 @@
         ComputeSHA1(data, dataSize) {
             const data_h = cartString(data);
             const result = Module._ComputeSHA1(data_h, dataSize);
-            Module._MemFree(data_h);
-            return result;
-        },
-
-        ComputeSHA256(data, dataSize) {
-            const data_h = cartString(data);
-            const result = Module._ComputeSHA256(data_h, dataSize);
             Module._MemFree(data_h);
             return result;
         },
@@ -1426,16 +1358,6 @@
             Module._MemFree(color_h);
         },
 
-        DrawLineDashed(startPos, endPos, dashSize, spaceSize, color) {
-            const startPos_h = cartVector2(startPos);
-            const endPos_h = cartVector2(endPos);
-            const color_h = cartColor(color);
-            Module._DrawLineDashed(startPos_h, endPos_h, dashSize, spaceSize, color_h);
-            Module._MemFree(startPos_h);
-            Module._MemFree(endPos_h);
-            Module._MemFree(color_h);
-        },
-
         DrawCircle(centerX, centerY, radius, color) {
             const color_h = cartColor(color);
             Module._DrawCircle(centerX, centerY, radius, color_h);
@@ -1494,25 +1416,9 @@
             Module._MemFree(color_h);
         },
 
-        DrawEllipseV(center, radiusH, radiusV, color) {
-            const center_h = cartVector2(center);
-            const color_h = cartColor(color);
-            Module._DrawEllipseV(center_h, radiusH, radiusV, color_h);
-            Module._MemFree(center_h);
-            Module._MemFree(color_h);
-        },
-
         DrawEllipseLines(centerX, centerY, radiusH, radiusV, color) {
             const color_h = cartColor(color);
             Module._DrawEllipseLines(centerX, centerY, radiusH, radiusV, color_h);
-            Module._MemFree(color_h);
-        },
-
-        DrawEllipseLinesV(center, radiusH, radiusV, color) {
-            const center_h = cartVector2(center);
-            const color_h = cartColor(color);
-            Module._DrawEllipseLinesV(center_h, radiusH, radiusV, color_h);
-            Module._MemFree(center_h);
             Module._MemFree(color_h);
         },
 
@@ -3112,19 +3018,6 @@
             return result;
         },
 
-        LoadTextLines(text, count) {
-            const text_h = cartString(text);
-            const result = Module._LoadTextLines(text_h, count);
-            Module._MemFree(text_h);
-            return result;
-        },
-
-        UnloadTextLines(text, lineCount) {
-            const text_h = cartString(text);
-            Module._UnloadTextLines(text_h, lineCount);
-            Module._MemFree(text_h);
-        },
-
         TextCopy(dst, src) {
             const dst_h = cartString(dst);
             const src_h = cartString(src);
@@ -3164,24 +3057,6 @@
             return result;
         },
 
-        TextRemoveSpaces(text) {
-            const text_h = cartString(text);
-            const result = Module._TextRemoveSpaces(text_h);
-            Module._MemFree(text_h);
-            return result;
-        },
-
-        GetTextBetween(text, begin, end) {
-            const text_h = cartString(text);
-            const begin_h = cartString(begin);
-            const end_h = cartString(end);
-            const result = Module._GetTextBetween(text_h, begin_h, end_h);
-            Module._MemFree(text_h);
-            Module._MemFree(begin_h);
-            Module._MemFree(end_h);
-            return result;
-        },
-
         TextReplace(text, search, replacement) {
             const text_h = cartString(text);
             const search_h = cartString(search);
@@ -3189,19 +3064,6 @@
             const result = Module._TextReplace(text_h, search_h, replacement_h);
             Module._MemFree(text_h);
             Module._MemFree(search_h);
-            Module._MemFree(replacement_h);
-            return result;
-        },
-
-        TextReplaceBetween(text, begin, end, replacement) {
-            const text_h = cartString(text);
-            const begin_h = cartString(begin);
-            const end_h = cartString(end);
-            const replacement_h = cartString(replacement);
-            const result = Module._TextReplaceBetween(text_h, begin_h, end_h, replacement_h);
-            Module._MemFree(text_h);
-            Module._MemFree(begin_h);
-            Module._MemFree(end_h);
             Module._MemFree(replacement_h);
             return result;
         },
