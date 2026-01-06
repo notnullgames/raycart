@@ -9,6 +9,12 @@ This directory contains code generators for automatically creating bindings betw
 - **generate_cart_c.js** - Generates import declarations for `carts/c/raycart.h` (C header for carts)
 - **generate_cart_js.js** - Generates `carts/c/js/raycart_bindings.c` (QuickJS bindings for JS carts)
 
+You can run all the code-generators in parallell:
+
+```bash
+npm run codegen
+```
+
 ### Customization
 
 By default, all raylib functions are exposed except those in the `functionsToExclude` list, for each generator. To exclude additional functions, edit the list:
@@ -92,12 +98,6 @@ static void raycart_ClearBackground(wasm_exec_env_t exec_env, Color* color) {
 npm run codegen:hostnative
 ```
 
-Or generate all files:
-
-```bash
-npm run codegen
-```
-
 ## generate_host_web.js
 
 Generates `host/host_web.c` from `raylib_api.json`. This creates JavaScript bindings that bridge between the cart WASM module and the host's Emscripten-compiled raylib.
@@ -153,12 +153,6 @@ ClearBackground(color) {
 
 ```bash
 npm run codegen:hostweb
-```
-
-Or generate all files:
-
-```bash
-npm run codegen
 ```
 
 ## generate_cart_c.js
@@ -228,12 +222,6 @@ Texture2D LoadTexture(const char * fileName);
 
 ```bash
 npm run codegen:cart
-```
-
-Or generate all files:
-
-```bash
-npm run codegen
 ```
 
 ## generate_cart_js.js
@@ -334,7 +322,7 @@ void expose_things_to_js() {
 ### Usage
 
 ```bash
-npm run codegen:quickjs
+npm run codegen:cartjs
 ```
 
 ### Excluded functions
