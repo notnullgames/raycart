@@ -940,9 +940,6 @@ void SetClipboardText(const char * text);
 RC_IMPORT("GetClipboardText")
 const char * GetClipboardText(void);
 
-RC_IMPORT("GetClipboardImage")
-Image GetClipboardImage(void);
-
 RC_IMPORT("EnableEventWaiting")
 void EnableEventWaiting(void);
 
@@ -1144,24 +1141,6 @@ void UnloadFileText(char * text);
 RC_IMPORT("SaveFileText")
 bool SaveFileText(const char * fileName, const char * text);
 
-RC_IMPORT("FileRename")
-int FileRename(const char * fileName, const char * fileRename);
-
-RC_IMPORT("FileRemove")
-int FileRemove(const char * fileName);
-
-RC_IMPORT("FileCopy")
-int FileCopy(const char * srcPath, const char * dstPath);
-
-RC_IMPORT("FileMove")
-int FileMove(const char * srcPath, const char * dstPath);
-
-RC_IMPORT("FileTextReplace")
-int FileTextReplace(const char * fileName, const char * search, const char * replacement);
-
-RC_IMPORT("FileTextFindIndex")
-int FileTextFindIndex(const char * fileName, const char * search);
-
 RC_IMPORT("FileExists")
 bool FileExists(const char * fileName);
 
@@ -1248,9 +1227,6 @@ unsigned int * ComputeMD5(unsigned char * data, int dataSize);
 
 RC_IMPORT("ComputeSHA1")
 unsigned int * ComputeSHA1(unsigned char * data, int dataSize);
-
-RC_IMPORT("ComputeSHA256")
-unsigned int * ComputeSHA256(unsigned char * data, int dataSize);
 
 RC_IMPORT("LoadAutomationEventList")
 AutomationEventList LoadAutomationEventList(const char * fileName);
@@ -1453,9 +1429,6 @@ void DrawLineStrip(const Vector2 * points, int pointCount, Color color);
 RC_IMPORT("DrawLineBezier")
 void DrawLineBezier(Vector2 startPos, Vector2 endPos, float thick, Color color);
 
-RC_IMPORT("DrawLineDashed")
-void DrawLineDashed(Vector2 startPos, Vector2 endPos, int dashSize, int spaceSize, Color color);
-
 RC_IMPORT("DrawCircle")
 void DrawCircle(int centerX, int centerY, float radius, Color color);
 
@@ -1480,14 +1453,8 @@ void DrawCircleLinesV(Vector2 center, float radius, Color color);
 RC_IMPORT("DrawEllipse")
 void DrawEllipse(int centerX, int centerY, float radiusH, float radiusV, Color color);
 
-RC_IMPORT("DrawEllipseV")
-void DrawEllipseV(Vector2 center, float radiusH, float radiusV, Color color);
-
 RC_IMPORT("DrawEllipseLines")
 void DrawEllipseLines(int centerX, int centerY, float radiusH, float radiusV, Color color);
-
-RC_IMPORT("DrawEllipseLinesV")
-void DrawEllipseLinesV(Vector2 center, float radiusH, float radiusV, Color color);
 
 RC_IMPORT("DrawRing")
 void DrawRing(Vector2 center, float innerRadius, float outerRadius, float startAngle, float endAngle, int segments, Color color);
@@ -2071,12 +2038,6 @@ int GetCodepointPrevious(const char * text, int * codepointSize);
 RC_IMPORT("CodepointToUTF8")
 const char * CodepointToUTF8(int codepoint, int * utf8Size);
 
-RC_IMPORT("LoadTextLines")
-char ** LoadTextLines(const char * text, int * count);
-
-RC_IMPORT("UnloadTextLines")
-void UnloadTextLines(char ** text, int lineCount);
-
 RC_IMPORT("TextCopy")
 int TextCopy(char * dst, const char * src);
 
@@ -2089,17 +2050,8 @@ unsigned int TextLength(const char * text);
 RC_IMPORT("TextSubtext")
 const char * TextSubtext(const char * text, int position, int length);
 
-RC_IMPORT("TextRemoveSpaces")
-const char * TextRemoveSpaces(const char * text);
-
-RC_IMPORT("GetTextBetween")
-char * GetTextBetween(const char * text, const char * begin, const char * end);
-
 RC_IMPORT("TextReplace")
 char * TextReplace(const char * text, const char * search, const char * replacement);
-
-RC_IMPORT("TextReplaceBetween")
-char * TextReplaceBetween(const char * text, const char * begin, const char * end, const char * replacement);
 
 RC_IMPORT("TextInsert")
 char * TextInsert(const char * text, const char * insert, int position);

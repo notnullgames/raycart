@@ -449,7 +449,6 @@ _SaveFileData
 _SaveFileText
 _SeekMusicStream
 _SetAudioStreamBufferSizeDefault
-_SetAudioStreamCallback
 _SetAudioStreamPan
 _SetAudioStreamPitch
 _SetAudioStreamVolume

@@ -1473,10 +1473,6 @@ static JSValue js_GetClipboardText(JSContext *ctx, JSValueConst this_val, int ar
   return string_to_js(GetClipboardText());
 }
 
-static JSValue js_GetClipboardImage(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
-  return image_to_js(GetClipboardImage());
-}
-
 static JSValue js_EnableEventWaiting(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
   EnableEventWaiting();
   return JS_UNDEFINED;
@@ -1757,30 +1753,6 @@ static JSValue js_UnloadFileText(JSContext *ctx, JSValueConst this_val, int argc
 
 static JSValue js_SaveFileText(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
   return bool_to_js(SaveFileText(string_from_js(argv[0]), string_from_js(argv[1])));
-}
-
-static JSValue js_FileRename(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
-  return i32_to_js(FileRename(string_from_js(argv[0]), string_from_js(argv[1])));
-}
-
-static JSValue js_FileRemove(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
-  return i32_to_js(FileRemove(string_from_js(argv[0])));
-}
-
-static JSValue js_FileCopy(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
-  return i32_to_js(FileCopy(string_from_js(argv[0]), string_from_js(argv[1])));
-}
-
-static JSValue js_FileMove(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
-  return i32_to_js(FileMove(string_from_js(argv[0]), string_from_js(argv[1])));
-}
-
-static JSValue js_FileTextReplace(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
-  return i32_to_js(FileTextReplace(string_from_js(argv[0]), string_from_js(argv[1]), string_from_js(argv[2])));
-}
-
-static JSValue js_FileTextFindIndex(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
-  return i32_to_js(FileTextFindIndex(string_from_js(argv[0]), string_from_js(argv[1])));
 }
 
 static JSValue js_FileExists(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
@@ -2148,11 +2120,6 @@ static JSValue js_DrawLineBezier(JSContext *ctx, JSValueConst this_val, int argc
   return JS_UNDEFINED;
 }
 
-static JSValue js_DrawLineDashed(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
-  DrawLineDashed(vector2_from_js(argv[0]), vector2_from_js(argv[1]), i32_from_js(argv[2]), i32_from_js(argv[3]), color_from_js(argv[4]));
-  return JS_UNDEFINED;
-}
-
 static JSValue js_DrawCircle(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
   DrawCircle(i32_from_js(argv[0]), i32_from_js(argv[1]), f32_from_js(argv[2]), color_from_js(argv[3]));
   return JS_UNDEFINED;
@@ -2193,18 +2160,8 @@ static JSValue js_DrawEllipse(JSContext *ctx, JSValueConst this_val, int argc, J
   return JS_UNDEFINED;
 }
 
-static JSValue js_DrawEllipseV(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
-  DrawEllipseV(vector2_from_js(argv[0]), f32_from_js(argv[1]), f32_from_js(argv[2]), color_from_js(argv[3]));
-  return JS_UNDEFINED;
-}
-
 static JSValue js_DrawEllipseLines(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
   DrawEllipseLines(i32_from_js(argv[0]), i32_from_js(argv[1]), f32_from_js(argv[2]), f32_from_js(argv[3]), color_from_js(argv[4]));
-  return JS_UNDEFINED;
-}
-
-static JSValue js_DrawEllipseLinesV(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
-  DrawEllipseLinesV(vector2_from_js(argv[0]), f32_from_js(argv[1]), f32_from_js(argv[2]), color_from_js(argv[3]));
   return JS_UNDEFINED;
 }
 
@@ -2703,11 +2660,6 @@ static JSValue js_GetCodepointCount(JSContext *ctx, JSValueConst this_val, int a
   return i32_to_js(GetCodepointCount(string_from_js(argv[0])));
 }
 
-static JSValue js_UnloadTextLines(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
-  UnloadTextLines(string_from_js(argv[0]), i32_from_js(argv[1]));
-  return JS_UNDEFINED;
-}
-
 static JSValue js_TextCopy(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
   return i32_to_js(TextCopy(string_from_js(argv[0]), string_from_js(argv[1])));
 }
@@ -2724,20 +2676,8 @@ static JSValue js_TextSubtext(JSContext *ctx, JSValueConst this_val, int argc, J
   return string_to_js(TextSubtext(string_from_js(argv[0]), i32_from_js(argv[1]), i32_from_js(argv[2])));
 }
 
-static JSValue js_TextRemoveSpaces(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
-  return string_to_js(TextRemoveSpaces(string_from_js(argv[0])));
-}
-
-static JSValue js_GetTextBetween(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
-  return string_to_js(GetTextBetween(string_from_js(argv[0]), string_from_js(argv[1]), string_from_js(argv[2])));
-}
-
 static JSValue js_TextReplace(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
   return string_to_js(TextReplace(string_from_js(argv[0]), string_from_js(argv[1]), string_from_js(argv[2])));
-}
-
-static JSValue js_TextReplaceBetween(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
-  return string_to_js(TextReplaceBetween(string_from_js(argv[0]), string_from_js(argv[1]), string_from_js(argv[2]), string_from_js(argv[3])));
 }
 
 static JSValue js_TextInsert(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
@@ -3715,7 +3655,6 @@ void expose_things_to_js() {
   JS_SetPropertyStr(ctx, global, "GetMonitorName", JS_NewCFunction(ctx, js_GetMonitorName, "GetMonitorName", 1));
   JS_SetPropertyStr(ctx, global, "SetClipboardText", JS_NewCFunction(ctx, js_SetClipboardText, "SetClipboardText", 1));
   JS_SetPropertyStr(ctx, global, "GetClipboardText", JS_NewCFunction(ctx, js_GetClipboardText, "GetClipboardText", 0));
-  JS_SetPropertyStr(ctx, global, "GetClipboardImage", JS_NewCFunction(ctx, js_GetClipboardImage, "GetClipboardImage", 0));
   JS_SetPropertyStr(ctx, global, "EnableEventWaiting", JS_NewCFunction(ctx, js_EnableEventWaiting, "EnableEventWaiting", 0));
   JS_SetPropertyStr(ctx, global, "DisableEventWaiting", JS_NewCFunction(ctx, js_DisableEventWaiting, "DisableEventWaiting", 0));
   JS_SetPropertyStr(ctx, global, "ShowCursor", JS_NewCFunction(ctx, js_ShowCursor, "ShowCursor", 0));
@@ -3777,12 +3716,6 @@ void expose_things_to_js() {
   JS_SetPropertyStr(ctx, global, "LoadFileText", JS_NewCFunction(ctx, js_LoadFileText, "LoadFileText", 1));
   JS_SetPropertyStr(ctx, global, "UnloadFileText", JS_NewCFunction(ctx, js_UnloadFileText, "UnloadFileText", 1));
   JS_SetPropertyStr(ctx, global, "SaveFileText", JS_NewCFunction(ctx, js_SaveFileText, "SaveFileText", 2));
-  JS_SetPropertyStr(ctx, global, "FileRename", JS_NewCFunction(ctx, js_FileRename, "FileRename", 2));
-  JS_SetPropertyStr(ctx, global, "FileRemove", JS_NewCFunction(ctx, js_FileRemove, "FileRemove", 1));
-  JS_SetPropertyStr(ctx, global, "FileCopy", JS_NewCFunction(ctx, js_FileCopy, "FileCopy", 2));
-  JS_SetPropertyStr(ctx, global, "FileMove", JS_NewCFunction(ctx, js_FileMove, "FileMove", 2));
-  JS_SetPropertyStr(ctx, global, "FileTextReplace", JS_NewCFunction(ctx, js_FileTextReplace, "FileTextReplace", 3));
-  JS_SetPropertyStr(ctx, global, "FileTextFindIndex", JS_NewCFunction(ctx, js_FileTextFindIndex, "FileTextFindIndex", 2));
   JS_SetPropertyStr(ctx, global, "FileExists", JS_NewCFunction(ctx, js_FileExists, "FileExists", 1));
   JS_SetPropertyStr(ctx, global, "DirectoryExists", JS_NewCFunction(ctx, js_DirectoryExists, "DirectoryExists", 1));
   JS_SetPropertyStr(ctx, global, "IsFileExtension", JS_NewCFunction(ctx, js_IsFileExtension, "IsFileExtension", 2));
@@ -3869,7 +3802,6 @@ void expose_things_to_js() {
   JS_SetPropertyStr(ctx, global, "DrawLineV", JS_NewCFunction(ctx, js_DrawLineV, "DrawLineV", 3));
   JS_SetPropertyStr(ctx, global, "DrawLineEx", JS_NewCFunction(ctx, js_DrawLineEx, "DrawLineEx", 4));
   JS_SetPropertyStr(ctx, global, "DrawLineBezier", JS_NewCFunction(ctx, js_DrawLineBezier, "DrawLineBezier", 4));
-  JS_SetPropertyStr(ctx, global, "DrawLineDashed", JS_NewCFunction(ctx, js_DrawLineDashed, "DrawLineDashed", 5));
   JS_SetPropertyStr(ctx, global, "DrawCircle", JS_NewCFunction(ctx, js_DrawCircle, "DrawCircle", 4));
   JS_SetPropertyStr(ctx, global, "DrawCircleSector", JS_NewCFunction(ctx, js_DrawCircleSector, "DrawCircleSector", 6));
   JS_SetPropertyStr(ctx, global, "DrawCircleSectorLines", JS_NewCFunction(ctx, js_DrawCircleSectorLines, "DrawCircleSectorLines", 6));
@@ -3878,9 +3810,7 @@ void expose_things_to_js() {
   JS_SetPropertyStr(ctx, global, "DrawCircleLines", JS_NewCFunction(ctx, js_DrawCircleLines, "DrawCircleLines", 4));
   JS_SetPropertyStr(ctx, global, "DrawCircleLinesV", JS_NewCFunction(ctx, js_DrawCircleLinesV, "DrawCircleLinesV", 3));
   JS_SetPropertyStr(ctx, global, "DrawEllipse", JS_NewCFunction(ctx, js_DrawEllipse, "DrawEllipse", 5));
-  JS_SetPropertyStr(ctx, global, "DrawEllipseV", JS_NewCFunction(ctx, js_DrawEllipseV, "DrawEllipseV", 4));
   JS_SetPropertyStr(ctx, global, "DrawEllipseLines", JS_NewCFunction(ctx, js_DrawEllipseLines, "DrawEllipseLines", 5));
-  JS_SetPropertyStr(ctx, global, "DrawEllipseLinesV", JS_NewCFunction(ctx, js_DrawEllipseLinesV, "DrawEllipseLinesV", 4));
   JS_SetPropertyStr(ctx, global, "DrawRing", JS_NewCFunction(ctx, js_DrawRing, "DrawRing", 7));
   JS_SetPropertyStr(ctx, global, "DrawRingLines", JS_NewCFunction(ctx, js_DrawRingLines, "DrawRingLines", 7));
   JS_SetPropertyStr(ctx, global, "DrawRectangle", JS_NewCFunction(ctx, js_DrawRectangle, "DrawRectangle", 5));
@@ -3994,15 +3924,11 @@ void expose_things_to_js() {
   JS_SetPropertyStr(ctx, global, "GetGlyphAtlasRec", JS_NewCFunction(ctx, js_GetGlyphAtlasRec, "GetGlyphAtlasRec", 2));
   JS_SetPropertyStr(ctx, global, "UnloadUTF8", JS_NewCFunction(ctx, js_UnloadUTF8, "UnloadUTF8", 1));
   JS_SetPropertyStr(ctx, global, "GetCodepointCount", JS_NewCFunction(ctx, js_GetCodepointCount, "GetCodepointCount", 1));
-  JS_SetPropertyStr(ctx, global, "UnloadTextLines", JS_NewCFunction(ctx, js_UnloadTextLines, "UnloadTextLines", 2));
   JS_SetPropertyStr(ctx, global, "TextCopy", JS_NewCFunction(ctx, js_TextCopy, "TextCopy", 2));
   JS_SetPropertyStr(ctx, global, "TextIsEqual", JS_NewCFunction(ctx, js_TextIsEqual, "TextIsEqual", 2));
   JS_SetPropertyStr(ctx, global, "TextLength", JS_NewCFunction(ctx, js_TextLength, "TextLength", 1));
   JS_SetPropertyStr(ctx, global, "TextSubtext", JS_NewCFunction(ctx, js_TextSubtext, "TextSubtext", 3));
-  JS_SetPropertyStr(ctx, global, "TextRemoveSpaces", JS_NewCFunction(ctx, js_TextRemoveSpaces, "TextRemoveSpaces", 1));
-  JS_SetPropertyStr(ctx, global, "GetTextBetween", JS_NewCFunction(ctx, js_GetTextBetween, "GetTextBetween", 3));
   JS_SetPropertyStr(ctx, global, "TextReplace", JS_NewCFunction(ctx, js_TextReplace, "TextReplace", 3));
-  JS_SetPropertyStr(ctx, global, "TextReplaceBetween", JS_NewCFunction(ctx, js_TextReplaceBetween, "TextReplaceBetween", 4));
   JS_SetPropertyStr(ctx, global, "TextInsert", JS_NewCFunction(ctx, js_TextInsert, "TextInsert", 3));
   JS_SetPropertyStr(ctx, global, "TextJoin", JS_NewCFunction(ctx, js_TextJoin, "TextJoin", 3));
   JS_SetPropertyStr(ctx, global, "TextFindIndex", JS_NewCFunction(ctx, js_TextFindIndex, "TextFindIndex", 2));

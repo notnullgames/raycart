@@ -73,7 +73,7 @@ node codegen/generate_host_web.js
 
 ### Customization
 
-By default, all raylib functions are exposed except those in the `functionsToExclude` blacklist. To exclude additional functions, edit the blacklist in `generate_host_web.js`:
+By default, all raylib functions are exposed except those in the `functionsToExclude` list. To exclude additional functions, edit the list in `generate_host_web.js`:
 
 ```javascript
 const functionsToExclude = [
