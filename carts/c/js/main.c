@@ -68,5 +68,11 @@ void CartInit(){
 
 void CartUpdate() {
   cart("CartUpdate", NULL, 0);
+  // this makes console.logs work right
   fflush(stdout);
 }
+
+void CartClose() {
+  cart("CartClose", NULL, 0);
+}
+
