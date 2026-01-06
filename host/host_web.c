@@ -31,6 +31,14 @@ EM_ASYNC_JS(bool, CartInit, (char *wasmBuffer, int bytesRead), {
         return hostPtr;
     };
 
+    const copyToCart = (hostPtr, size) => {
+        const hostMemory = Module.HEAPU8;
+        const cartPtr = cart.malloc(size);
+        const cartMemory = new Uint8Array(cart.memory.buffer);
+        cartMemory.set(hostMemory.subarray(hostPtr, hostPtr + size), cartPtr);
+        return cartPtr;
+    };
+
     const cartStringLen = ptr => {
         const cartMemory = new Uint8Array(cart.memory.buffer, ptr, 1024);
         let strlen = 0;
@@ -40,13 +48,22 @@ EM_ASYNC_JS(bool, CartInit, (char *wasmBuffer, int bytesRead), {
         return strlen;
     };
 
-    const copyStringFromCart = (ptr) => copyFromCart(ptr, cartStringLen(ptr) + 1);
+    // copy from cart to host
+    const cartString = (ptr) => copyFromCart(ptr, cartStringLen(ptr) + 1);
     const cartColor = ptr => copyFromCart(ptr, 4);
+    const cartTexture = ptr => copyFromCart(ptr, 20);
+
+
+    // copy from host to cart
+    const hostString = (ptr) => copyToCart(ptr, strlen(ptr) + 1);
+    const hostColor = ptr => copyToCart(ptr, 4);
+    const hostTexture = ptr => copyToCart(ptr, 20);
+
 
     // TODO: Generate this from host wasm exports
     const raycart = {
         InitWindow(width, height, title) {
-            const title_h = copyStringFromCart(title);
+            const title_h = cartString(title);
             Module._InitWindow(width, height, title_h);
             Module._MemFree(title_h);
         },
@@ -58,7 +75,7 @@ EM_ASYNC_JS(bool, CartInit, (char *wasmBuffer, int bytesRead), {
         },
         
         DrawText(text, posX, posY, fontSize, color) {
-            const text_h = copyStringFromCart(text);
+            const text_h = cartString(text);
             const color_h = cartColor(color);
             Module._DrawText(text_h, posX, posY, fontSize, color_h);
             Module._MemFree(text_h);
@@ -66,15 +83,24 @@ EM_ASYNC_JS(bool, CartInit, (char *wasmBuffer, int bytesRead), {
         },
 
         LoadTexture(fileName) {
-            const fileName_h = copyStringFromCart(fileName);
-            // const r = LoadFileTextFromPhysFS(fileName_h)
-            Module._MemFree(fileName_h);            
+            const fileName_h = cartString(fileName);
+            const r = Module._LoadTextureFromPhysFS(fileName_h);
+            Module._MemFree(fileName_h);
+            return hostTexture(r);        
         },
 
         UnloadTexture(texture){
+            const texture_h = cartTexture(texture);
+            Module._UnloadTexture(texture_h);
+            Module._MemFree(texture_h);
         },
 
         DrawTexture(texture, posX, posY, tint){
+            const texture_h = cartTexture(texture);
+            const tint_h = cartColor(tint);
+            Module._DrawTexture(texture_h, posX, posY, tint_h);
+            Module._MemFree(texture_h);
+            Module._MemFree(tint_h);
         }
     };
 

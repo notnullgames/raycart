@@ -1,5 +1,7 @@
-#include "physfs.h"
 #include "raylib.h"
+
+#define RAYLIB_PHYSFS_IMPLEMENTATION
+#include "raylib-physfs.h"
 
 // these are implemented for each host-type
 extern bool CartInit(char *wasmBuffer, int bytesRead);

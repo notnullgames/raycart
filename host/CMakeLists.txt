@@ -30,13 +30,21 @@ FETCHCONTENT_DECLARE(
 )
 FETCHCONTENT_MAKEAVAILABLE(raylib)
 
+# Fetch raylib-physfs
+FETCHCONTENT_DECLARE(
+    raylib_physfs
+    URL https://github.com/RobLoach/raylib-physfs/archive/refs/heads/master.zip
+)
+FETCHCONTENT_MAKEAVAILABLE(raylib_physfs)
+
+
 # Main executable
 FILE(GLOB SRC_FILES *.c)
 ADD_EXECUTABLE(host ${SRC_FILES})
 SET_TARGET_PROPERTIES(host PROPERTIES OUTPUT_NAME ${PROJECT_NAME})
 
 # Link PhysicsFS static library & raylib
-TARGET_LINK_LIBRARIES(host PRIVATE physfs-static raylib)
+TARGET_LINK_LIBRARIES(host PRIVATE physfs-static raylib raylib_physfs)
 
 # Emscripten-specific settings
 IF(EMSCRIPTEN)

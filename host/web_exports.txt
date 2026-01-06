@@ -6,6 +6,6 @@ _MemFree
 _MemAlloc
 _BeginDrawing
 _EndDrawing
-_LoadTexture
+_LoadTextureFromPhysFS
 _UnloadTexture
 _DrawTexture
