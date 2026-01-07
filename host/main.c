@@ -36,6 +36,12 @@ int main(int argc, char *argv[]) {
 
     TraceLog(LOG_INFO, "Mounted %s successfully", argv[1]);
 
+    // Set up PhysFS callbacks so all raylib file operations use PhysFS
+    SetLoadFileDataCallback(LoadFileDataFromPhysFS);
+    SetSaveFileDataCallback(SaveFileDataToPhysFS);
+    SetLoadFileTextCallback(LoadFileTextFromPhysFS);
+    SetSaveFileTextCallback(SaveFileTextToPhysFS);
+
     // Read main.wasm
     PHYSFS_File *file = PHYSFS_openRead("main.wasm");
     if (!file) {

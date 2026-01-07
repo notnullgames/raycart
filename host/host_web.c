@@ -489,7 +489,7 @@ EM_ASYNC_JS(bool, CartInit, (char *wasmBuffer, int bytesRead), {
             const vsFileName_h = cartString(vsFileName);
             const fsFileName_h = cartString(fsFileName);
             const result_h = Module._MemAlloc(8);
-            Module._LoadShaderFromPhysFS(result_h, vsFileName_h, fsFileName_h);
+            Module._LoadShader(result_h, vsFileName_h, fsFileName_h);
             Module._MemFree(vsFileName_h);
             Module._MemFree(fsFileName_h);
             copyHostToCart(result_h, resultPtr, 8);
@@ -727,7 +727,7 @@ EM_ASYNC_JS(bool, CartInit, (char *wasmBuffer, int bytesRead), {
 
         LoadFileData(fileName, dataSize) {
             const fileName_h = cartString(fileName);
-            const result = Module._LoadFileDataFromPhysFS(fileName_h, dataSize);
+            const result = Module._LoadFileData(fileName_h, dataSize);
             Module._MemFree(fileName_h);
             return result;
         },
@@ -740,7 +740,7 @@ EM_ASYNC_JS(bool, CartInit, (char *wasmBuffer, int bytesRead), {
 
         SaveFileData(fileName, data, dataSize) {
             const fileName_h = cartString(fileName);
-            const result = Module._SaveFileDataToPhysFS(fileName_h, data, dataSize);
+            const result = Module._SaveFileData(fileName_h, data, dataSize);
             Module._MemFree(fileName_h);
             return result;
         },
@@ -756,7 +756,7 @@ EM_ASYNC_JS(bool, CartInit, (char *wasmBuffer, int bytesRead), {
 
         LoadFileText(fileName) {
             const fileName_h = cartString(fileName);
-            const result = Module._LoadFileTextFromPhysFS(fileName_h);
+            const result = Module._LoadFileText(fileName_h);
             Module._MemFree(fileName_h);
             return result;
         },
@@ -770,7 +770,7 @@ EM_ASYNC_JS(bool, CartInit, (char *wasmBuffer, int bytesRead), {
         SaveFileText(fileName, text) {
             const fileName_h = cartString(fileName);
             const text_h = cartString(text);
-            const result = Module._SaveFileTextToPhysFS(fileName_h, text_h);
+            const result = Module._SaveFileText(fileName_h, text_h);
             Module._MemFree(fileName_h);
             Module._MemFree(text_h);
             return result;
@@ -778,14 +778,14 @@ EM_ASYNC_JS(bool, CartInit, (char *wasmBuffer, int bytesRead), {
 
         FileExists(fileName) {
             const fileName_h = cartString(fileName);
-            const result = Module._FileExistsInPhysFS(fileName_h);
+            const result = Module._FileExists(fileName_h);
             Module._MemFree(fileName_h);
             return result;
         },
 
         DirectoryExists(dirPath) {
             const dirPath_h = cartString(dirPath);
-            const result = Module._DirectoryExistsInPhysFS(dirPath_h);
+            const result = Module._DirectoryExists(dirPath_h);
             Module._MemFree(dirPath_h);
             return result;
         },
@@ -808,7 +808,7 @@ EM_ASYNC_JS(bool, CartInit, (char *wasmBuffer, int bytesRead), {
 
         GetFileModTime(fileName) {
             const fileName_h = cartString(fileName);
-            const result = Module._GetFileModTimeFromPhysFS(fileName_h);
+            const result = Module._GetFileModTime(fileName_h);
             Module._MemFree(fileName_h);
             return result;
         },
@@ -889,7 +889,7 @@ EM_ASYNC_JS(bool, CartInit, (char *wasmBuffer, int bytesRead), {
         LoadDirectoryFiles(resultPtr, dirPath) {
             const dirPath_h = cartString(dirPath);
             const result_h = Module._MemAlloc(12);
-            Module._LoadDirectoryFilesFromPhysFS(result_h, dirPath_h);
+            Module._LoadDirectoryFiles(result_h, dirPath_h);
             Module._MemFree(dirPath_h);
             copyHostToCart(result_h, resultPtr, 12);
             Module._MemFree(result_h);
@@ -1876,7 +1876,7 @@ EM_ASYNC_JS(bool, CartInit, (char *wasmBuffer, int bytesRead), {
         LoadImage(resultPtr, fileName) {
             const fileName_h = cartString(fileName);
             const result_h = Module._MemAlloc(20);
-            Module._LoadImageFromPhysFS(result_h, fileName_h);
+            Module._LoadImage(result_h, fileName_h);
             Module._MemFree(fileName_h);
             copyHostToCart(result_h, resultPtr, 20);
             Module._MemFree(result_h);
@@ -2230,24 +2230,6 @@ EM_ASYNC_JS(bool, CartInit, (char *wasmBuffer, int bytesRead), {
             Module._MemFree(replace_h);
         },
 
-        LoadImageColors(resultPtr, image) {
-            const image_h = cartImage(image);
-            const result_h = Module._MemAlloc(4);
-            Module._LoadImageColors(result_h, image_h);
-            Module._MemFree(image_h);
-            copyHostToCart(result_h, resultPtr, 4);
-            Module._MemFree(result_h);
-        },
-
-        LoadImagePalette(resultPtr, image, maxPaletteSize, colorCount) {
-            const image_h = cartImage(image);
-            const result_h = Module._MemAlloc(4);
-            Module._LoadImagePalette(result_h, image_h, maxPaletteSize, colorCount);
-            Module._MemFree(image_h);
-            copyHostToCart(result_h, resultPtr, 4);
-            Module._MemFree(result_h);
-        },
-
         UnloadImageColors(colors) {
             Module._UnloadImageColors(colors);
         },
@@ -2467,7 +2449,7 @@ EM_ASYNC_JS(bool, CartInit, (char *wasmBuffer, int bytesRead), {
         LoadTexture(resultPtr, fileName) {
             const fileName_h = cartString(fileName);
             const result_h = Module._MemAlloc(20);
-            Module._LoadTextureFromPhysFS(result_h, fileName_h);
+            Module._LoadTexture(result_h, fileName_h);
             Module._MemFree(fileName_h);
             copyHostToCart(result_h, resultPtr, 20);
             Module._MemFree(result_h);
@@ -2778,7 +2760,7 @@ EM_ASYNC_JS(bool, CartInit, (char *wasmBuffer, int bytesRead), {
         LoadFont(resultPtr, fileName) {
             const fileName_h = cartString(fileName);
             const result_h = Module._MemAlloc(40);
-            Module._LoadFontFromPhysFS(result_h, fileName_h);
+            Module._LoadFont(result_h, fileName_h);
             Module._MemFree(fileName_h);
             copyHostToCart(result_h, resultPtr, 40);
             Module._MemFree(result_h);
@@ -2822,13 +2804,11 @@ EM_ASYNC_JS(bool, CartInit, (char *wasmBuffer, int bytesRead), {
             return result;
         },
 
-        LoadFontData(resultPtr, fileData, dataSize, fontSize, codepoints, codepointCount, type, glyphCount) {
+        LoadFontData(fileData, dataSize, fontSize, codepoints, codepointCount, type, glyphCount) {
             const fileData_h = cartString(fileData);
-            const result_h = Module._MemAlloc(36);
-            Module._LoadFontData(result_h, fileData_h, dataSize, fontSize, codepoints, codepointCount, type, glyphCount);
+            const result = Module._LoadFontData(fileData_h, dataSize, fontSize, codepoints, codepointCount, type, glyphCount);
             Module._MemFree(fileData_h);
-            copyHostToCart(result_h, resultPtr, 36);
-            Module._MemFree(result_h);
+            return result;
         },
 
         GenImageFontAtlas(resultPtr, glyphs, glyphRecs, glyphCount, fontSize, padding, packMethod) {
@@ -3660,15 +3640,6 @@ EM_ASYNC_JS(bool, CartInit, (char *wasmBuffer, int bytesRead), {
             Module._MemFree(result_h);
         },
 
-        LoadMaterials(resultPtr, fileName, materialCount) {
-            const fileName_h = cartString(fileName);
-            const result_h = Module._MemAlloc(12);
-            Module._LoadMaterials(result_h, fileName_h, materialCount);
-            Module._MemFree(fileName_h);
-            copyHostToCart(result_h, resultPtr, 12);
-            Module._MemFree(result_h);
-        },
-
         LoadMaterialDefault(resultPtr) {
             const result_h = Module._MemAlloc(12);
             Module._LoadMaterialDefault(result_h);
@@ -3697,15 +3668,6 @@ EM_ASYNC_JS(bool, CartInit, (char *wasmBuffer, int bytesRead), {
 
         SetModelMeshMaterial(model, meshId, materialId) {
             Module._SetModelMeshMaterial(model, meshId, materialId);
-        },
-
-        LoadModelAnimations(resultPtr, fileName, animCount) {
-            const fileName_h = cartString(fileName);
-            const result_h = Module._MemAlloc(16);
-            Module._LoadModelAnimations(result_h, fileName_h, animCount);
-            Module._MemFree(fileName_h);
-            copyHostToCart(result_h, resultPtr, 16);
-            Module._MemFree(result_h);
         },
 
         UpdateModelAnimation(model, anim, frame) {
@@ -3862,7 +3824,7 @@ EM_ASYNC_JS(bool, CartInit, (char *wasmBuffer, int bytesRead), {
         LoadWave(resultPtr, fileName) {
             const fileName_h = cartString(fileName);
             const result_h = Module._MemAlloc(20);
-            Module._LoadWaveFromPhysFS(result_h, fileName_h);
+            Module._LoadWave(result_h, fileName_h);
             Module._MemFree(fileName_h);
             copyHostToCart(result_h, resultPtr, 20);
             Module._MemFree(result_h);
@@ -4042,7 +4004,7 @@ EM_ASYNC_JS(bool, CartInit, (char *wasmBuffer, int bytesRead), {
         LoadMusicStream(resultPtr, fileName) {
             const fileName_h = cartString(fileName);
             const result_h = Module._MemAlloc(32);
-            Module._LoadMusicStreamFromPhysFS(result_h, fileName_h);
+            Module._LoadMusicStream(result_h, fileName_h);
             Module._MemFree(fileName_h);
             copyHostToCart(result_h, resultPtr, 32);
             Module._MemFree(result_h);

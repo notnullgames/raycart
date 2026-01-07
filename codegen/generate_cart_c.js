@@ -76,17 +76,16 @@ function generateAlias(alias) {
   return `typedef ${alias.type} ${alias.name};`
 }
 
-// Same list as host_web
 // Functions to exclude from the API (cart has its own or doesn't make sense to expose)
 const functionsToExclude = [
   'MemAlloc',
   'MemRealloc',
   'MemFree',
   'SetTraceLogCallback',
-  'SetLoadFileDataCallback',
-  'SetSaveFileDataCallback',
-  'SetLoadFileTextCallback',
-  'SetSaveFileTextCallback',
+  'SetLoadFileDataCallback',  // Set in host/main.c to use PhysFS
+  'SetSaveFileDataCallback',  // Set in host/main.c to use PhysFS
+  'SetLoadFileTextCallback',  // Set in host/main.c to use PhysFS
+  'SetSaveFileTextCallback',  // Set in host/main.c to use PhysFS
   'SetAudioStreamCallback',
   'AttachAudioStreamProcessor',
   'DetachAudioStreamProcessor',
@@ -109,7 +108,13 @@ const functionsToExclude = [
   'UnloadTextLines',
   'TextRemoveSpaces',
   'GetTextBetween',
-  'TextReplaceBetween'
+  'TextReplaceBetween',
+
+  // Functions with complex pointer returns + pointer params that WAMR can't handle
+  'LoadModelAnimations',
+  'LoadMaterials',
+  'LoadImageColors',
+  'LoadImagePalette'
 ]
 
 // Variadic functions that will be implemented cart-side
@@ -126,15 +131,12 @@ function shouldExcludeFunction(func) {
     return true
   }
 
-  // Exclude functions with callback parameters (not in C types)
-  const callbackTypes = ['AudioCallback', 'TraceLogCallback', 'LoadFileDataCallback', 'SaveFileDataCallback', 'LoadFileTextCallback', 'SaveFileTextCallback']
-  const params = func.params || []
+  // Note: We don't exclude callback functions for C carts since C supports function pointers natively
+  // Only exclude specific callbacks that are in the functionsToExclude list
 
+  // Exclude any remaining variadic functions
+  const params = func.params || []
   for (const param of params) {
-    if (callbackTypes.includes(param.type)) {
-      return true
-    }
-    // Also exclude any remaining variadic functions
     if (param.type === '...') {
       return true
     }
@@ -297,6 +299,50 @@ static inline void TraceLog(int logLevel, const char* text, ...) {
 // Raylib Function Imports (from host)
 //----------------------------------------------------------------------------------
 ${functionImports}
+
+//----------------------------------------------------------------------------------
+// Manual function wrappers for complex pointer patterns
+//----------------------------------------------------------------------------------
+
+// LoadModelAnimations returns pointer to array, manually wrapped
+RC_IMPORT("LoadModelAnimations")
+void __raycart_LoadModelAnimations(uint32_t *result, const char *fileName, int *animCount);
+
+static inline ModelAnimation *LoadModelAnimations(const char *fileName, int *animCount) {
+    uint32_t result;
+    __raycart_LoadModelAnimations(&result, fileName, animCount);
+    return (ModelAnimation *)(uintptr_t)result;
+}
+
+// LoadMaterials returns pointer to array, manually wrapped
+RC_IMPORT("LoadMaterials")
+void __raycart_LoadMaterials(uint32_t *result, const char *fileName, int *materialCount);
+
+static inline Material *LoadMaterials(const char *fileName, int *materialCount) {
+    uint32_t result;
+    __raycart_LoadMaterials(&result, fileName, materialCount);
+    return (Material *)(uintptr_t)result;
+}
+
+// LoadImageColors returns pointer to array, manually wrapped
+RC_IMPORT("LoadImageColors")
+void __raycart_LoadImageColors(uint32_t *result, Image image);
+
+static inline Color *LoadImageColors(Image image) {
+    uint32_t result;
+    __raycart_LoadImageColors(&result, image);
+    return (Color *)(uintptr_t)result;
+}
+
+// LoadImagePalette returns pointer to array, manually wrapped
+RC_IMPORT("LoadImagePalette")
+void __raycart_LoadImagePalette(uint32_t *result, Image image, int maxPaletteSize, int *colorCount);
+
+static inline Color *LoadImagePalette(Image image, int maxPaletteSize, int *colorCount) {
+    uint32_t result;
+    __raycart_LoadImagePalette(&result, image, maxPaletteSize, colorCount);
+    return (Color *)(uintptr_t)result;
+}
 `
 
 // Calculate excluded functions with reasons

@@ -50,14 +50,16 @@ void CartUpdate () {
     //----------------------------------------------------------------------------------
     UpdateCamera(&camera, CAMERA_ORBITAL);
 
-    // Select current animation
-    if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) animIndex = (animIndex + 1)%animsCount;
-    else if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) animIndex = (animIndex + animsCount - 1)%animsCount;
+    if (modelAnimations != NULL && animsCount > 0) {
+        // Select current animation
+        if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) animIndex = (animIndex + 1)%animsCount;
+        else if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) animIndex = (animIndex + animsCount - 1)%animsCount;
 
-    // Update model animation
-    ModelAnimation anim = modelAnimations[animIndex];
-    animCurrentFrame = (animCurrentFrame + 1)%anim.frameCount;
-    UpdateModelAnimation(model, anim, animCurrentFrame);
+        // Update model animation
+        ModelAnimation anim = modelAnimations[animIndex];
+        animCurrentFrame = (animCurrentFrame + 1)%anim.frameCount;
+        UpdateModelAnimation(model, anim, animCurrentFrame);
+    }
     //----------------------------------------------------------------------------------
 
     // Draw
@@ -69,8 +71,14 @@ void CartUpdate () {
         DrawGrid(10, 1.0f);
     EndMode3D();
 
-    DrawText("Use the LEFT/RIGHT mouse buttons to switch animation", 10, 10, 20, GRAY);
-    DrawText(TextFormat("Animation: %s", anim.name), 10, GetScreenHeight() - 20, 10, DARKGRAY);
+    if (modelAnimations != NULL && animsCount > 0) {
+        ModelAnimation anim = modelAnimations[animIndex];
+        DrawText("Use the LEFT/RIGHT mouse buttons to switch animation", 10, 10, 20, GRAY);
+        DrawText(TextFormat("Animation: %s", anim.name), 10, GetScreenHeight() - 20, 10, DARKGRAY);
+    } else {
+        DrawText("Model animations not supported yet", 10, 10, 20, RED);
+        DrawText("(Complex nested pointer structures need deep copying)", 10, 30, 10, GRAY);
+    }
 }
 
 void CartClose() {

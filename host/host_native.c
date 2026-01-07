@@ -5,6 +5,7 @@
 #include "wamr_wasi_physfs.h"
 #include "wasm_export.h"
 #include <stddef.h>
+#include <string.h>
 
 // TODO: make sure these mem-sizes match web-host, so you have a known amount of RAM
 static uint32_t stack_size = 1024 * 1024 * 10; // 10 MB
@@ -20,6 +21,7 @@ static wasm_function_inst_t cart_callback_close = NULL;
 
 // Generated raylib wrapper functions
 static void raycart_InitWindow(wasm_exec_env_t exec_env, int width, int height, const char * title) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     InitWindow(width, height, title);
 }
 
@@ -100,6 +102,7 @@ static void raycart_SetWindowIcons(wasm_exec_env_t exec_env, Image * images, int
 }
 
 static void raycart_SetWindowTitle(wasm_exec_env_t exec_env, const char * title) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     SetWindowTitle(title);
 }
 
@@ -196,6 +199,7 @@ static const char * raycart_GetMonitorName(wasm_exec_env_t exec_env, int monitor
 }
 
 static void raycart_SetClipboardText(wasm_exec_env_t exec_env, const char * text) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     SetClipboardText(text);
 }
 
@@ -312,10 +316,12 @@ static void raycart_UnloadVrStereoConfig(wasm_exec_env_t exec_env, VrStereoConfi
 }
 
 static void raycart_LoadShader(wasm_exec_env_t exec_env, Shader* __result, const char * vsFileName, const char * fsFileName) {
-    *__result = LoadShaderFromPhysFS(vsFileName, fsFileName);
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
+    *__result = LoadShader(vsFileName, fsFileName);
 }
 
 static void raycart_LoadShaderFromMemory(wasm_exec_env_t exec_env, Shader* __result, const char * vsCode, const char * fsCode) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     *__result = LoadShaderFromMemory(vsCode, fsCode);
 }
 
@@ -324,10 +330,12 @@ static bool raycart_IsShaderValid(wasm_exec_env_t exec_env, Shader* shader) {
 }
 
 static int raycart_GetShaderLocation(wasm_exec_env_t exec_env, Shader* shader, const char * uniformName) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     return GetShaderLocation(*shader, uniformName);
 }
 
 static int raycart_GetShaderLocationAttrib(wasm_exec_env_t exec_env, Shader* shader, const char * attribName) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     return GetShaderLocationAttrib(*shader, attribName);
 }
 
@@ -423,11 +431,14 @@ static int * raycart_LoadRandomSequence(wasm_exec_env_t exec_env, unsigned int c
     return LoadRandomSequence(count, min, max);
 }
 
-static void raycart_UnloadRandomSequence(wasm_exec_env_t exec_env, int * sequence) {
-    UnloadRandomSequence(sequence);
+static void raycart_UnloadRandomSequence(wasm_exec_env_t exec_env, uint32_t sequence) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
+        int * sequence_native = (int *)wasm_runtime_addr_app_to_native(module_inst, sequence);
+    UnloadRandomSequence(sequence_native);
 }
 
 static void raycart_TakeScreenshot(wasm_exec_env_t exec_env, const char * fileName) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     TakeScreenshot(fileName);
 }
 
@@ -436,6 +447,7 @@ static void raycart_SetConfigFlags(wasm_exec_env_t exec_env, unsigned int flags)
 }
 
 static void raycart_OpenURL(wasm_exec_env_t exec_env, const char * url) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     OpenURL(url);
 }
 
@@ -443,71 +455,89 @@ static void raycart_SetTraceLogLevel(wasm_exec_env_t exec_env, int logLevel) {
     SetTraceLogLevel(logLevel);
 }
 
-static unsigned char * raycart_LoadFileData(wasm_exec_env_t exec_env, const char * fileName, int * dataSize) {
-    return LoadFileDataFromPhysFS(fileName, dataSize);
+static unsigned char * raycart_LoadFileData(wasm_exec_env_t exec_env, const char * fileName, uint32_t dataSize) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
+        int * dataSize_native = (int *)wasm_runtime_addr_app_to_native(module_inst, dataSize);
+    return LoadFileData(fileName, dataSize_native);
 }
 
 static void raycart_UnloadFileData(wasm_exec_env_t exec_env, unsigned char * data) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     UnloadFileData(data);
 }
 
 static bool raycart_SaveFileData(wasm_exec_env_t exec_env, const char * fileName, void * data, int dataSize) {
-    return SaveFileDataToPhysFS(fileName, data, dataSize);
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
+    return SaveFileData(fileName, data, dataSize);
 }
 
 static bool raycart_ExportDataAsCode(wasm_exec_env_t exec_env, const unsigned char * data, int dataSize, const char * fileName) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     return ExportDataAsCode(data, dataSize, fileName);
 }
 
 static char * raycart_LoadFileText(wasm_exec_env_t exec_env, const char * fileName) {
-    return LoadFileTextFromPhysFS(fileName);
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
+    return LoadFileText(fileName);
 }
 
 static void raycart_UnloadFileText(wasm_exec_env_t exec_env, char * text) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     UnloadFileText(text);
 }
 
 static bool raycart_SaveFileText(wasm_exec_env_t exec_env, const char * fileName, const char * text) {
-    return SaveFileTextToPhysFS(fileName, text);
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
+    return SaveFileText(fileName, text);
 }
 
 static bool raycart_FileExists(wasm_exec_env_t exec_env, const char * fileName) {
-    return FileExistsInPhysFS(fileName);
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
+    return FileExists(fileName);
 }
 
 static bool raycart_DirectoryExists(wasm_exec_env_t exec_env, const char * dirPath) {
-    return DirectoryExistsInPhysFS(dirPath);
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
+    return DirectoryExists(dirPath);
 }
 
 static bool raycart_IsFileExtension(wasm_exec_env_t exec_env, const char * fileName, const char * ext) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     return IsFileExtension(fileName, ext);
 }
 
 static int raycart_GetFileLength(wasm_exec_env_t exec_env, const char * fileName) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     return GetFileLength(fileName);
 }
 
 static long raycart_GetFileModTime(wasm_exec_env_t exec_env, const char * fileName) {
-    return GetFileModTimeFromPhysFS(fileName);
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
+    return GetFileModTime(fileName);
 }
 
 static const char * raycart_GetFileExtension(wasm_exec_env_t exec_env, const char * fileName) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     return GetFileExtension(fileName);
 }
 
 static const char * raycart_GetFileName(wasm_exec_env_t exec_env, const char * filePath) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     return GetFileName(filePath);
 }
 
 static const char * raycart_GetFileNameWithoutExt(wasm_exec_env_t exec_env, const char * filePath) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     return GetFileNameWithoutExt(filePath);
 }
 
 static const char * raycart_GetDirectoryPath(wasm_exec_env_t exec_env, const char * filePath) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     return GetDirectoryPath(filePath);
 }
 
 static const char * raycart_GetPrevDirectoryPath(wasm_exec_env_t exec_env, const char * dirPath) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     return GetPrevDirectoryPath(dirPath);
 }
 
@@ -520,26 +550,32 @@ static const char * raycart_GetApplicationDirectory(wasm_exec_env_t exec_env) {
 }
 
 static int raycart_MakeDirectory(wasm_exec_env_t exec_env, const char * dirPath) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     return MakeDirectory(dirPath);
 }
 
 static bool raycart_ChangeDirectory(wasm_exec_env_t exec_env, const char * dirPath) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     return ChangeDirectory(dirPath);
 }
 
 static bool raycart_IsPathFile(wasm_exec_env_t exec_env, const char * path) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     return IsPathFile(path);
 }
 
 static bool raycart_IsFileNameValid(wasm_exec_env_t exec_env, const char * fileName) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     return IsFileNameValid(fileName);
 }
 
 static void raycart_LoadDirectoryFiles(wasm_exec_env_t exec_env, FilePathList* __result, const char * dirPath) {
-    *__result = LoadDirectoryFilesFromPhysFS(dirPath);
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
+    *__result = LoadDirectoryFiles(dirPath);
 }
 
 static void raycart_LoadDirectoryFilesEx(wasm_exec_env_t exec_env, FilePathList* __result, const char * basePath, const char * filter, bool scanSubdirs) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     *__result = LoadDirectoryFilesEx(basePath, filter, scanSubdirs);
 }
 
@@ -559,35 +595,47 @@ static void raycart_UnloadDroppedFiles(wasm_exec_env_t exec_env, FilePathList* f
     UnloadDroppedFiles(*files);
 }
 
-static unsigned char * raycart_CompressData(wasm_exec_env_t exec_env, const unsigned char * data, int dataSize, int * compDataSize) {
-    return CompressData(data, dataSize, compDataSize);
+static unsigned char * raycart_CompressData(wasm_exec_env_t exec_env, const unsigned char * data, int dataSize, uint32_t compDataSize) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
+        int * compDataSize_native = (int *)wasm_runtime_addr_app_to_native(module_inst, compDataSize);
+    return CompressData(data, dataSize, compDataSize_native);
 }
 
-static unsigned char * raycart_DecompressData(wasm_exec_env_t exec_env, const unsigned char * compData, int compDataSize, int * dataSize) {
-    return DecompressData(compData, compDataSize, dataSize);
+static unsigned char * raycart_DecompressData(wasm_exec_env_t exec_env, const unsigned char * compData, int compDataSize, uint32_t dataSize) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
+        int * dataSize_native = (int *)wasm_runtime_addr_app_to_native(module_inst, dataSize);
+    return DecompressData(compData, compDataSize, dataSize_native);
 }
 
-static char * raycart_EncodeDataBase64(wasm_exec_env_t exec_env, const unsigned char * data, int dataSize, int * outputSize) {
-    return EncodeDataBase64(data, dataSize, outputSize);
+static char * raycart_EncodeDataBase64(wasm_exec_env_t exec_env, const unsigned char * data, int dataSize, uint32_t outputSize) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
+        int * outputSize_native = (int *)wasm_runtime_addr_app_to_native(module_inst, outputSize);
+    return EncodeDataBase64(data, dataSize, outputSize_native);
 }
 
-static unsigned char * raycart_DecodeDataBase64(wasm_exec_env_t exec_env, const char * text, int * outputSize) {
-    return DecodeDataBase64(text, outputSize);
+static unsigned char * raycart_DecodeDataBase64(wasm_exec_env_t exec_env, const char * text, uint32_t outputSize) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
+        int * outputSize_native = (int *)wasm_runtime_addr_app_to_native(module_inst, outputSize);
+    return DecodeDataBase64(text, outputSize_native);
 }
 
 static unsigned int raycart_ComputeCRC32(wasm_exec_env_t exec_env, unsigned char * data, int dataSize) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     return ComputeCRC32(data, dataSize);
 }
 
 static unsigned int * raycart_ComputeMD5(wasm_exec_env_t exec_env, unsigned char * data, int dataSize) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     return ComputeMD5(data, dataSize);
 }
 
 static unsigned int * raycart_ComputeSHA1(wasm_exec_env_t exec_env, unsigned char * data, int dataSize) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     return ComputeSHA1(data, dataSize);
 }
 
 static void raycart_LoadAutomationEventList(wasm_exec_env_t exec_env, AutomationEventList* __result, const char * fileName) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     *__result = LoadAutomationEventList(fileName);
 }
 
@@ -596,6 +644,7 @@ static void raycart_UnloadAutomationEventList(wasm_exec_env_t exec_env, Automati
 }
 
 static bool raycart_ExportAutomationEventList(wasm_exec_env_t exec_env, AutomationEventList* list, const char * fileName) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     return ExportAutomationEventList(*list, fileName);
 }
 
@@ -688,6 +737,7 @@ static float raycart_GetGamepadAxisMovement(wasm_exec_env_t exec_env, int gamepa
 }
 
 static int raycart_SetGamepadMappings(wasm_exec_env_t exec_env, const char * mappings) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     return SetGamepadMappings(mappings);
 }
 
@@ -1076,22 +1126,29 @@ static void raycart_GetCollisionRec(wasm_exec_env_t exec_env, Rectangle* __resul
 }
 
 static void raycart_LoadImage(wasm_exec_env_t exec_env, Image* __result, const char * fileName) {
-    *__result = LoadImageFromPhysFS(fileName);
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
+    *__result = LoadImage(fileName);
 }
 
 static void raycart_LoadImageRaw(wasm_exec_env_t exec_env, Image* __result, const char * fileName, int width, int height, int format, int headerSize) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     *__result = LoadImageRaw(fileName, width, height, format, headerSize);
 }
 
-static void raycart_LoadImageAnim(wasm_exec_env_t exec_env, Image* __result, const char * fileName, int * frames) {
-    *__result = LoadImageAnim(fileName, frames);
+static void raycart_LoadImageAnim(wasm_exec_env_t exec_env, Image* __result, const char * fileName, uint32_t frames) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
+        int * frames_native = (int *)wasm_runtime_addr_app_to_native(module_inst, frames);
+    *__result = LoadImageAnim(fileName, frames_native);
 }
 
-static void raycart_LoadImageAnimFromMemory(wasm_exec_env_t exec_env, Image* __result, const char * fileType, const unsigned char * fileData, int dataSize, int * frames) {
-    *__result = LoadImageAnimFromMemory(fileType, fileData, dataSize, frames);
+static void raycart_LoadImageAnimFromMemory(wasm_exec_env_t exec_env, Image* __result, const char * fileType, const unsigned char * fileData, int dataSize, uint32_t frames) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
+        int * frames_native = (int *)wasm_runtime_addr_app_to_native(module_inst, frames);
+    *__result = LoadImageAnimFromMemory(fileType, fileData, dataSize, frames_native);
 }
 
 static void raycart_LoadImageFromMemory(wasm_exec_env_t exec_env, Image* __result, const char * fileType, const unsigned char * fileData, int dataSize) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     *__result = LoadImageFromMemory(fileType, fileData, dataSize);
 }
 
@@ -1112,14 +1169,18 @@ static void raycart_UnloadImage(wasm_exec_env_t exec_env, Image* image) {
 }
 
 static bool raycart_ExportImage(wasm_exec_env_t exec_env, Image* image, const char * fileName) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     return ExportImage(*image, fileName);
 }
 
-static unsigned char * raycart_ExportImageToMemory(wasm_exec_env_t exec_env, Image* image, const char * fileType, int * fileSize) {
-    return ExportImageToMemory(*image, fileType, fileSize);
+static unsigned char * raycart_ExportImageToMemory(wasm_exec_env_t exec_env, Image* image, const char * fileType, uint32_t fileSize) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
+        int * fileSize_native = (int *)wasm_runtime_addr_app_to_native(module_inst, fileSize);
+    return ExportImageToMemory(*image, fileType, fileSize_native);
 }
 
 static bool raycart_ExportImageAsCode(wasm_exec_env_t exec_env, Image* image, const char * fileName) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     return ExportImageAsCode(*image, fileName);
 }
 
@@ -1156,6 +1217,7 @@ static void raycart_GenImageCellular(wasm_exec_env_t exec_env, Image* __result, 
 }
 
 static void raycart_GenImageText(wasm_exec_env_t exec_env, Image* __result, int width, int height, const char * text) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     *__result = GenImageText(width, height, text);
 }
 
@@ -1172,10 +1234,12 @@ static void raycart_ImageFromChannel(wasm_exec_env_t exec_env, Image* __result, 
 }
 
 static void raycart_ImageText(wasm_exec_env_t exec_env, Image* __result, const char * text, int fontSize, Color* color) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     *__result = ImageText(text, fontSize, *color);
 }
 
 static void raycart_ImageTextEx(wasm_exec_env_t exec_env, Image* __result, Font* font, const char * text, float fontSize, float spacing, Color* tint) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     *__result = ImageTextEx(*font, text, fontSize, spacing, *tint);
 }
 
@@ -1211,8 +1275,10 @@ static void raycart_ImageBlurGaussian(wasm_exec_env_t exec_env, Image * image, i
     ImageBlurGaussian(image, blurSize);
 }
 
-static void raycart_ImageKernelConvolution(wasm_exec_env_t exec_env, Image * image, const float * kernel, int kernelSize) {
-    ImageKernelConvolution(image, kernel, kernelSize);
+static void raycart_ImageKernelConvolution(wasm_exec_env_t exec_env, Image * image, uint32_t kernel, int kernelSize) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
+        float * kernel_native = (float *)wasm_runtime_addr_app_to_native(module_inst, kernel);
+    ImageKernelConvolution(image, kernel_native, kernelSize);
 }
 
 static void raycart_ImageResize(wasm_exec_env_t exec_env, Image * image, int newWidth, int newHeight) {
@@ -1277,14 +1343,6 @@ static void raycart_ImageColorBrightness(wasm_exec_env_t exec_env, Image * image
 
 static void raycart_ImageColorReplace(wasm_exec_env_t exec_env, Image * image, Color* color, Color* replace) {
     ImageColorReplace(image, *color, *replace);
-}
-
-static void raycart_LoadImageColors(wasm_exec_env_t exec_env, Color ** __result, Image* image) {
-    *__result = LoadImageColors(*image);
-}
-
-static void raycart_LoadImagePalette(wasm_exec_env_t exec_env, Color ** __result, Image* image, int maxPaletteSize, int * colorCount) {
-    *__result = LoadImagePalette(*image, maxPaletteSize, colorCount);
 }
 
 static void raycart_UnloadImageColors(wasm_exec_env_t exec_env, Color * colors) {
@@ -1384,15 +1442,18 @@ static void raycart_ImageDraw(wasm_exec_env_t exec_env, Image * dst, Image* src,
 }
 
 static void raycart_ImageDrawText(wasm_exec_env_t exec_env, Image * dst, const char * text, int posX, int posY, int fontSize, Color* color) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     ImageDrawText(dst, text, posX, posY, fontSize, *color);
 }
 
 static void raycart_ImageDrawTextEx(wasm_exec_env_t exec_env, Image * dst, Font* font, const char * text, Vector2* position, float fontSize, float spacing, Color* tint) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     ImageDrawTextEx(dst, *font, text, *position, fontSize, spacing, *tint);
 }
 
 static void raycart_LoadTexture(wasm_exec_env_t exec_env, Texture2D* __result, const char * fileName) {
-    *__result = LoadTextureFromPhysFS(fileName);
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
+    *__result = LoadTexture(fileName);
 }
 
 static void raycart_LoadTextureFromImage(wasm_exec_env_t exec_env, Texture2D* __result, Image* image) {
@@ -1540,19 +1601,24 @@ static void raycart_GetFontDefault(wasm_exec_env_t exec_env, Font* __result) {
 }
 
 static void raycart_LoadFont(wasm_exec_env_t exec_env, Font* __result, const char * fileName) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     *__result = LoadFont(fileName);
 }
 
-static void raycart_LoadFontEx(wasm_exec_env_t exec_env, Font* __result, const char * fileName, int fontSize, const int * codepoints, int codepointCount) {
-    *__result = LoadFontEx(fileName, fontSize, codepoints, codepointCount);
+static void raycart_LoadFontEx(wasm_exec_env_t exec_env, Font* __result, const char * fileName, int fontSize, uint32_t codepoints, int codepointCount) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
+        int * codepoints_native = (int *)wasm_runtime_addr_app_to_native(module_inst, codepoints);
+    *__result = LoadFontEx(fileName, fontSize, codepoints_native, codepointCount);
 }
 
 static void raycart_LoadFontFromImage(wasm_exec_env_t exec_env, Font* __result, Image* image, Color* key, int firstChar) {
     *__result = LoadFontFromImage(*image, *key, firstChar);
 }
 
-static void raycart_LoadFontFromMemory(wasm_exec_env_t exec_env, Font* __result, const char * fileType, const unsigned char * fileData, int dataSize, int fontSize, const int * codepoints, int codepointCount) {
-    *__result = LoadFontFromMemory(fileType, fileData, dataSize, fontSize, codepoints, codepointCount);
+static void raycart_LoadFontFromMemory(wasm_exec_env_t exec_env, Font* __result, const char * fileType, const unsigned char * fileData, int dataSize, int fontSize, uint32_t codepoints, int codepointCount) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
+        int * codepoints_native = (int *)wasm_runtime_addr_app_to_native(module_inst, codepoints);
+    *__result = LoadFontFromMemory(fileType, fileData, dataSize, fontSize, codepoints_native, codepointCount);
 }
 
 static bool raycart_IsFontValid(wasm_exec_env_t exec_env, Font* font) {
@@ -1572,6 +1638,7 @@ static void raycart_UnloadFont(wasm_exec_env_t exec_env, Font* font) {
 }
 
 static bool raycart_ExportFontAsCode(wasm_exec_env_t exec_env, Font* font, const char * fileName) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     return ExportFontAsCode(*font, fileName);
 }
 
@@ -1580,14 +1647,17 @@ static void raycart_DrawFPS(wasm_exec_env_t exec_env, int posX, int posY) {
 }
 
 static void raycart_DrawText(wasm_exec_env_t exec_env, const char * text, int posX, int posY, int fontSize, Color* color) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     DrawText(text, posX, posY, fontSize, *color);
 }
 
 static void raycart_DrawTextEx(wasm_exec_env_t exec_env, Font* font, const char * text, Vector2* position, float fontSize, float spacing, Color* tint) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     DrawTextEx(*font, text, *position, fontSize, spacing, *tint);
 }
 
 static void raycart_DrawTextPro(wasm_exec_env_t exec_env, Font* font, const char * text, Vector2* position, Vector2* origin, float rotation, float fontSize, float spacing, Color* tint) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     DrawTextPro(*font, text, *position, *origin, rotation, fontSize, spacing, *tint);
 }
 
@@ -1595,8 +1665,10 @@ static void raycart_DrawTextCodepoint(wasm_exec_env_t exec_env, Font* font, int 
     DrawTextCodepoint(*font, codepoint, *position, fontSize, *tint);
 }
 
-static void raycart_DrawTextCodepoints(wasm_exec_env_t exec_env, Font* font, const int * codepoints, int codepointCount, Vector2* position, float fontSize, float spacing, Color* tint) {
-    DrawTextCodepoints(*font, codepoints, codepointCount, *position, fontSize, spacing, *tint);
+static void raycart_DrawTextCodepoints(wasm_exec_env_t exec_env, Font* font, uint32_t codepoints, int codepointCount, Vector2* position, float fontSize, float spacing, Color* tint) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
+        int * codepoints_native = (int *)wasm_runtime_addr_app_to_native(module_inst, codepoints);
+    DrawTextCodepoints(*font, codepoints_native, codepointCount, *position, fontSize, spacing, *tint);
 }
 
 static void raycart_SetTextLineSpacing(wasm_exec_env_t exec_env, int spacing) {
@@ -1604,10 +1676,12 @@ static void raycart_SetTextLineSpacing(wasm_exec_env_t exec_env, int spacing) {
 }
 
 static int raycart_MeasureText(wasm_exec_env_t exec_env, const char * text, int fontSize) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     return MeasureText(text, fontSize);
 }
 
 static void raycart_MeasureTextEx(wasm_exec_env_t exec_env, Vector2* __result, Font* font, const char * text, float fontSize, float spacing) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     *__result = MeasureTextEx(*font, text, fontSize, spacing);
 }
 
@@ -1623,107 +1697,142 @@ static void raycart_GetGlyphAtlasRec(wasm_exec_env_t exec_env, Rectangle* __resu
     *__result = GetGlyphAtlasRec(*font, codepoint);
 }
 
-static char * raycart_LoadUTF8(wasm_exec_env_t exec_env, const int * codepoints, int length) {
-    return LoadUTF8(codepoints, length);
+static char * raycart_LoadUTF8(wasm_exec_env_t exec_env, uint32_t codepoints, int length) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
+        int * codepoints_native = (int *)wasm_runtime_addr_app_to_native(module_inst, codepoints);
+    return LoadUTF8(codepoints_native, length);
 }
 
 static void raycart_UnloadUTF8(wasm_exec_env_t exec_env, char * text) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     UnloadUTF8(text);
 }
 
-static int * raycart_LoadCodepoints(wasm_exec_env_t exec_env, const char * text, int * count) {
-    return LoadCodepoints(text, count);
+static int * raycart_LoadCodepoints(wasm_exec_env_t exec_env, const char * text, uint32_t count) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
+        int * count_native = (int *)wasm_runtime_addr_app_to_native(module_inst, count);
+    return LoadCodepoints(text, count_native);
 }
 
-static void raycart_UnloadCodepoints(wasm_exec_env_t exec_env, int * codepoints) {
-    UnloadCodepoints(codepoints);
+static void raycart_UnloadCodepoints(wasm_exec_env_t exec_env, uint32_t codepoints) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
+        int * codepoints_native = (int *)wasm_runtime_addr_app_to_native(module_inst, codepoints);
+    UnloadCodepoints(codepoints_native);
 }
 
 static int raycart_GetCodepointCount(wasm_exec_env_t exec_env, const char * text) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     return GetCodepointCount(text);
 }
 
-static int raycart_GetCodepoint(wasm_exec_env_t exec_env, const char * text, int * codepointSize) {
-    return GetCodepoint(text, codepointSize);
+static int raycart_GetCodepoint(wasm_exec_env_t exec_env, const char * text, uint32_t codepointSize) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
+        int * codepointSize_native = (int *)wasm_runtime_addr_app_to_native(module_inst, codepointSize);
+    return GetCodepoint(text, codepointSize_native);
 }
 
-static int raycart_GetCodepointNext(wasm_exec_env_t exec_env, const char * text, int * codepointSize) {
-    return GetCodepointNext(text, codepointSize);
+static int raycart_GetCodepointNext(wasm_exec_env_t exec_env, const char * text, uint32_t codepointSize) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
+        int * codepointSize_native = (int *)wasm_runtime_addr_app_to_native(module_inst, codepointSize);
+    return GetCodepointNext(text, codepointSize_native);
 }
 
-static int raycart_GetCodepointPrevious(wasm_exec_env_t exec_env, const char * text, int * codepointSize) {
-    return GetCodepointPrevious(text, codepointSize);
+static int raycart_GetCodepointPrevious(wasm_exec_env_t exec_env, const char * text, uint32_t codepointSize) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
+        int * codepointSize_native = (int *)wasm_runtime_addr_app_to_native(module_inst, codepointSize);
+    return GetCodepointPrevious(text, codepointSize_native);
 }
 
-static const char * raycart_CodepointToUTF8(wasm_exec_env_t exec_env, int codepoint, int * utf8Size) {
-    return CodepointToUTF8(codepoint, utf8Size);
+static const char * raycart_CodepointToUTF8(wasm_exec_env_t exec_env, int codepoint, uint32_t utf8Size) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
+        int * utf8Size_native = (int *)wasm_runtime_addr_app_to_native(module_inst, utf8Size);
+    return CodepointToUTF8(codepoint, utf8Size_native);
 }
 
 static int raycart_TextCopy(wasm_exec_env_t exec_env, char * dst, const char * src) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     return TextCopy(dst, src);
 }
 
 static bool raycart_TextIsEqual(wasm_exec_env_t exec_env, const char * text1, const char * text2) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     return TextIsEqual(text1, text2);
 }
 
 static unsigned int raycart_TextLength(wasm_exec_env_t exec_env, const char * text) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     return TextLength(text);
 }
 
 static const char * raycart_TextSubtext(wasm_exec_env_t exec_env, const char * text, int position, int length) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     return TextSubtext(text, position, length);
 }
 
 static char * raycart_TextReplace(wasm_exec_env_t exec_env, const char * text, const char * search, const char * replacement) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     return TextReplace(text, search, replacement);
 }
 
 static char * raycart_TextInsert(wasm_exec_env_t exec_env, const char * text, const char * insert, int position) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     return TextInsert(text, insert, position);
 }
 
 static char * raycart_TextJoin(wasm_exec_env_t exec_env, char ** textList, int count, const char * delimiter) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     return TextJoin(textList, count, delimiter);
 }
 
-static char ** raycart_TextSplit(wasm_exec_env_t exec_env, const char * text, char delimiter, int * count) {
-    return TextSplit(text, delimiter, count);
+static char ** raycart_TextSplit(wasm_exec_env_t exec_env, const char * text, char delimiter, uint32_t count) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
+        int * count_native = (int *)wasm_runtime_addr_app_to_native(module_inst, count);
+    return TextSplit(text, delimiter, count_native);
 }
 
-static void raycart_TextAppend(wasm_exec_env_t exec_env, char * text, const char * append, int * position) {
-    TextAppend(text, append, position);
+static void raycart_TextAppend(wasm_exec_env_t exec_env, char * text, const char * append, uint32_t position) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
+        int * position_native = (int *)wasm_runtime_addr_app_to_native(module_inst, position);
+    TextAppend(text, append, position_native);
 }
 
 static int raycart_TextFindIndex(wasm_exec_env_t exec_env, const char * text, const char * search) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     return TextFindIndex(text, search);
 }
 
 static char * raycart_TextToUpper(wasm_exec_env_t exec_env, const char * text) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     return TextToUpper(text);
 }
 
 static char * raycart_TextToLower(wasm_exec_env_t exec_env, const char * text) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     return TextToLower(text);
 }
 
 static char * raycart_TextToPascal(wasm_exec_env_t exec_env, const char * text) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     return TextToPascal(text);
 }
 
 static char * raycart_TextToSnake(wasm_exec_env_t exec_env, const char * text) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     return TextToSnake(text);
 }
 
 static char * raycart_TextToCamel(wasm_exec_env_t exec_env, const char * text) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     return TextToCamel(text);
 }
 
 static int raycart_TextToInteger(wasm_exec_env_t exec_env, const char * text) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     return TextToInteger(text);
 }
 
 static float raycart_TextToFloat(wasm_exec_env_t exec_env, const char * text) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     return TextToFloat(text);
 }
 
@@ -1812,6 +1921,7 @@ static void raycart_DrawGrid(wasm_exec_env_t exec_env, int slices, float spacing
 }
 
 static void raycart_LoadModel(wasm_exec_env_t exec_env, Model* __result, const char * fileName) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     *__result = LoadModel(fileName);
 }
 
@@ -1900,10 +2010,12 @@ static void raycart_GenMeshTangents(wasm_exec_env_t exec_env, Mesh * mesh) {
 }
 
 static bool raycart_ExportMesh(wasm_exec_env_t exec_env, Mesh* mesh, const char * fileName) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     return ExportMesh(*mesh, fileName);
 }
 
 static bool raycart_ExportMeshAsCode(wasm_exec_env_t exec_env, Mesh* mesh, const char * fileName) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     return ExportMeshAsCode(*mesh, fileName);
 }
 
@@ -1951,10 +2063,6 @@ static void raycart_GenMeshCubicmap(wasm_exec_env_t exec_env, Mesh* __result, Im
     *__result = GenMeshCubicmap(*cubicmap, *cubeSize);
 }
 
-static void raycart_LoadMaterials(wasm_exec_env_t exec_env, Material ** __result, const char * fileName, int * materialCount) {
-    *__result = LoadMaterials(fileName, materialCount);
-}
-
 static void raycart_LoadMaterialDefault(wasm_exec_env_t exec_env, Material* __result) {
     *__result = LoadMaterialDefault();
 }
@@ -1973,10 +2081,6 @@ static void raycart_SetMaterialTexture(wasm_exec_env_t exec_env, Material * mate
 
 static void raycart_SetModelMeshMaterial(wasm_exec_env_t exec_env, Model * model, int meshId, int materialId) {
     SetModelMeshMaterial(model, meshId, materialId);
-}
-
-static void raycart_LoadModelAnimations(wasm_exec_env_t exec_env, ModelAnimation ** __result, const char * fileName, int * animCount) {
-    *__result = LoadModelAnimations(fileName, animCount);
 }
 
 static void raycart_UpdateModelAnimation(wasm_exec_env_t exec_env, Model* model, ModelAnimation* anim, int frame) {
@@ -2052,10 +2156,12 @@ static float raycart_GetMasterVolume(wasm_exec_env_t exec_env) {
 }
 
 static void raycart_LoadWave(wasm_exec_env_t exec_env, Wave* __result, const char * fileName) {
-    *__result = LoadWaveFromPhysFS(fileName);
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
+    *__result = LoadWave(fileName);
 }
 
 static void raycart_LoadWaveFromMemory(wasm_exec_env_t exec_env, Wave* __result, const char * fileType, const unsigned char * fileData, int dataSize) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     *__result = LoadWaveFromMemory(fileType, fileData, dataSize);
 }
 
@@ -2064,6 +2170,7 @@ static bool raycart_IsWaveValid(wasm_exec_env_t exec_env, Wave* wave) {
 }
 
 static void raycart_LoadSound(wasm_exec_env_t exec_env, Sound* __result, const char * fileName) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     *__result = LoadSound(fileName);
 }
 
@@ -2096,10 +2203,12 @@ static void raycart_UnloadSoundAlias(wasm_exec_env_t exec_env, Sound* alias) {
 }
 
 static bool raycart_ExportWave(wasm_exec_env_t exec_env, Wave* wave, const char * fileName) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     return ExportWave(*wave, fileName);
 }
 
 static bool raycart_ExportWaveAsCode(wasm_exec_env_t exec_env, Wave* wave, const char * fileName) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     return ExportWaveAsCode(*wave, fileName);
 }
 
@@ -2151,15 +2260,19 @@ static float * raycart_LoadWaveSamples(wasm_exec_env_t exec_env, Wave* wave) {
     return LoadWaveSamples(*wave);
 }
 
-static void raycart_UnloadWaveSamples(wasm_exec_env_t exec_env, float * samples) {
-    UnloadWaveSamples(samples);
+static void raycart_UnloadWaveSamples(wasm_exec_env_t exec_env, uint32_t samples) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
+        float * samples_native = (float *)wasm_runtime_addr_app_to_native(module_inst, samples);
+    UnloadWaveSamples(samples_native);
 }
 
 static void raycart_LoadMusicStream(wasm_exec_env_t exec_env, Music* __result, const char * fileName) {
-    *__result = LoadMusicStreamFromPhysFS(fileName);
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
+    *__result = LoadMusicStream(fileName);
 }
 
 static void raycart_LoadMusicStreamFromMemory(wasm_exec_env_t exec_env, Music* __result, const char * fileType, const unsigned char * data, int dataSize) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     *__result = LoadMusicStreamFromMemory(fileType, data, dataSize);
 }
 
@@ -2275,6 +2388,101 @@ static void raycart_SetAudioStreamBufferSizeDefault(wasm_exec_env_t exec_env, in
     SetAudioStreamBufferSizeDefault(size);
 }
 
+// Manual wrappers for functions with complex pointer patterns
+// TODO: LoadModelAnimations requires deep copying of nested pointer structures
+// (name, bones, framePoses). For now, return NULL to prevent crashes.
+static void raycart_LoadModelAnimations(wasm_exec_env_t exec_env, uint32_t result_ptr, const char *fileName, uint32_t animCount) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
+    int *animCount_native = (int *)wasm_runtime_addr_app_to_native(module_inst, animCount);
+
+    // Set count to 0 and return NULL
+    *animCount_native = 0;
+    uint32_t *result_wasm = (uint32_t *)wasm_runtime_addr_app_to_native(module_inst, result_ptr);
+    *result_wasm = 0;
+
+    TraceLog(LOG_WARNING, "LoadModelAnimations not fully implemented (requires deep copy of nested pointers)");
+}
+
+static void raycart_LoadMaterials(wasm_exec_env_t exec_env, uint32_t result_ptr, const char *fileName, uint32_t materialCount) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
+    int *materialCount_native = (int *)wasm_runtime_addr_app_to_native(module_inst, materialCount);
+
+    Material *result = LoadMaterials(fileName, materialCount_native);
+
+    if (result && *materialCount_native > 0) {
+        uint32_t wasm_size = sizeof(Material) * (*materialCount_native);
+        uint32_t wasm_ptr = wasm_runtime_module_malloc(module_inst, wasm_size, NULL);
+
+        if (wasm_ptr) {
+            Material *wasm_array = (Material *)wasm_runtime_addr_app_to_native(module_inst, wasm_ptr);
+            memcpy(wasm_array, result, wasm_size);
+
+            uint32_t *result_wasm = (uint32_t *)wasm_runtime_addr_app_to_native(module_inst, result_ptr);
+            *result_wasm = wasm_ptr;
+        } else {
+            uint32_t *result_wasm = (uint32_t *)wasm_runtime_addr_app_to_native(module_inst, result_ptr);
+            *result_wasm = 0;
+        }
+    } else {
+        uint32_t *result_wasm = (uint32_t *)wasm_runtime_addr_app_to_native(module_inst, result_ptr);
+        *result_wasm = 0;
+    }
+}
+
+static void raycart_LoadImageColors(wasm_exec_env_t exec_env, uint32_t result_ptr, Image *image) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
+
+    Color *result = LoadImageColors(*image);
+
+    if (result) {
+        // Image width * height gives us the number of colors
+        uint32_t wasm_size = sizeof(Color) * image->width * image->height;
+        uint32_t wasm_ptr = wasm_runtime_module_malloc(module_inst, wasm_size, NULL);
+
+        if (wasm_ptr) {
+            Color *wasm_array = (Color *)wasm_runtime_addr_app_to_native(module_inst, wasm_ptr);
+            memcpy(wasm_array, result, wasm_size);
+
+            uint32_t *result_wasm = (uint32_t *)wasm_runtime_addr_app_to_native(module_inst, result_ptr);
+            *result_wasm = wasm_ptr;
+        } else {
+            uint32_t *result_wasm = (uint32_t *)wasm_runtime_addr_app_to_native(module_inst, result_ptr);
+            *result_wasm = 0;
+        }
+        UnloadImageColors(result);
+    } else {
+        uint32_t *result_wasm = (uint32_t *)wasm_runtime_addr_app_to_native(module_inst, result_ptr);
+        *result_wasm = 0;
+    }
+}
+
+static void raycart_LoadImagePalette(wasm_exec_env_t exec_env, uint32_t result_ptr, Image *image, int maxPaletteSize, uint32_t colorCount) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
+    int *colorCount_native = (int *)wasm_runtime_addr_app_to_native(module_inst, colorCount);
+
+    Color *result = LoadImagePalette(*image, maxPaletteSize, colorCount_native);
+
+    if (result && *colorCount_native > 0) {
+        uint32_t wasm_size = sizeof(Color) * (*colorCount_native);
+        uint32_t wasm_ptr = wasm_runtime_module_malloc(module_inst, wasm_size, NULL);
+
+        if (wasm_ptr) {
+            Color *wasm_array = (Color *)wasm_runtime_addr_app_to_native(module_inst, wasm_ptr);
+            memcpy(wasm_array, result, wasm_size);
+
+            uint32_t *result_wasm = (uint32_t *)wasm_runtime_addr_app_to_native(module_inst, result_ptr);
+            *result_wasm = wasm_ptr;
+        } else {
+            uint32_t *result_wasm = (uint32_t *)wasm_runtime_addr_app_to_native(module_inst, result_ptr);
+            *result_wasm = 0;
+        }
+        UnloadImagePalette(result);
+    } else {
+        uint32_t *result_wasm = (uint32_t *)wasm_runtime_addr_app_to_native(module_inst, result_ptr);
+        *result_wasm = 0;
+    }
+}
+
 #define raycart_native_symbols_count 564
 static NativeSymbol raycart_native_symbols[raycart_native_symbols_count] = {
     {"InitWindow", raycart_InitWindow, "(ii$)"},
@@ -2377,13 +2585,13 @@ static NativeSymbol raycart_native_symbols[raycart_native_symbols_count] = {
     {"WaitTime", raycart_WaitTime, "(F)"},
     {"SetRandomSeed", raycart_SetRandomSeed, "(i)"},
     {"GetRandomValue", raycart_GetRandomValue, "(ii)i"},
-    {"LoadRandomSequence", raycart_LoadRandomSequence, "(iii)*"},
-    {"UnloadRandomSequence", raycart_UnloadRandomSequence, "(*)"},
+    {"LoadRandomSequence", raycart_LoadRandomSequence, "(iii)i"},
+    {"UnloadRandomSequence", raycart_UnloadRandomSequence, "(i)"},
     {"TakeScreenshot", raycart_TakeScreenshot, "($)"},
     {"SetConfigFlags", raycart_SetConfigFlags, "(i)"},
     {"OpenURL", raycart_OpenURL, "($)"},
     {"SetTraceLogLevel", raycart_SetTraceLogLevel, "(i)"},
-    {"LoadFileData", raycart_LoadFileData, "($*)$"},
+    {"LoadFileData", raycart_LoadFileData, "($i)$"},
     {"UnloadFileData", raycart_UnloadFileData, "($)"},
     {"SaveFileData", raycart_SaveFileData, "($*i)i"},
     {"ExportDataAsCode", raycart_ExportDataAsCode, "($i$)i"},
@@ -2412,13 +2620,13 @@ static NativeSymbol raycart_native_symbols[raycart_native_symbols_count] = {
     {"IsFileDropped", raycart_IsFileDropped, "()i"},
     {"LoadDroppedFiles", raycart_LoadDroppedFiles, "(*)"},
     {"UnloadDroppedFiles", raycart_UnloadDroppedFiles, "(*)"},
-    {"CompressData", raycart_CompressData, "($i*)$"},
-    {"DecompressData", raycart_DecompressData, "($i*)$"},
-    {"EncodeDataBase64", raycart_EncodeDataBase64, "($i*)$"},
-    {"DecodeDataBase64", raycart_DecodeDataBase64, "($*)$"},
+    {"CompressData", raycart_CompressData, "($ii)$"},
+    {"DecompressData", raycart_DecompressData, "($ii)$"},
+    {"EncodeDataBase64", raycart_EncodeDataBase64, "($ii)$"},
+    {"DecodeDataBase64", raycart_DecodeDataBase64, "($i)$"},
     {"ComputeCRC32", raycart_ComputeCRC32, "($i)i"},
-    {"ComputeMD5", raycart_ComputeMD5, "($i)*"},
-    {"ComputeSHA1", raycart_ComputeSHA1, "($i)*"},
+    {"ComputeMD5", raycart_ComputeMD5, "($i)i"},
+    {"ComputeSHA1", raycart_ComputeSHA1, "($i)i"},
     {"LoadAutomationEventList", raycart_LoadAutomationEventList, "(*$)"},
     {"UnloadAutomationEventList", raycart_UnloadAutomationEventList, "(*)"},
     {"ExportAutomationEventList", raycart_ExportAutomationEventList, "(*$)i"},
@@ -2543,15 +2751,15 @@ static NativeSymbol raycart_native_symbols[raycart_native_symbols_count] = {
     {"GetCollisionRec", raycart_GetCollisionRec, "(***)"},
     {"LoadImage", raycart_LoadImage, "(*$)"},
     {"LoadImageRaw", raycart_LoadImageRaw, "(*$iiii)"},
-    {"LoadImageAnim", raycart_LoadImageAnim, "(*$*)"},
-    {"LoadImageAnimFromMemory", raycart_LoadImageAnimFromMemory, "(*$$i*)"},
+    {"LoadImageAnim", raycart_LoadImageAnim, "(*$i)"},
+    {"LoadImageAnimFromMemory", raycart_LoadImageAnimFromMemory, "(*$$ii)"},
     {"LoadImageFromMemory", raycart_LoadImageFromMemory, "(*$$i)"},
     {"LoadImageFromTexture", raycart_LoadImageFromTexture, "(**)"},
     {"LoadImageFromScreen", raycart_LoadImageFromScreen, "(*)"},
     {"IsImageValid", raycart_IsImageValid, "(*)i"},
     {"UnloadImage", raycart_UnloadImage, "(*)"},
     {"ExportImage", raycart_ExportImage, "(*$)i"},
-    {"ExportImageToMemory", raycart_ExportImageToMemory, "(*$*)$"},
+    {"ExportImageToMemory", raycart_ExportImageToMemory, "(*$i)$"},
     {"ExportImageAsCode", raycart_ExportImageAsCode, "(*$)i"},
     {"GenImageColor", raycart_GenImageColor, "(*ii*)"},
     {"GenImageGradientLinear", raycart_GenImageGradientLinear, "(*iii**)"},
@@ -2575,7 +2783,7 @@ static NativeSymbol raycart_native_symbols[raycart_native_symbols_count] = {
     {"ImageAlphaMask", raycart_ImageAlphaMask, "(**)"},
     {"ImageAlphaPremultiply", raycart_ImageAlphaPremultiply, "(*)"},
     {"ImageBlurGaussian", raycart_ImageBlurGaussian, "(*i)"},
-    {"ImageKernelConvolution", raycart_ImageKernelConvolution, "(**i)"},
+    {"ImageKernelConvolution", raycart_ImageKernelConvolution, "(*ii)"},
     {"ImageResize", raycart_ImageResize, "(*ii)"},
     {"ImageResizeNN", raycart_ImageResizeNN, "(*ii)"},
     {"ImageResizeCanvas", raycart_ImageResizeCanvas, "(*iiii*)"},
@@ -2592,8 +2800,6 @@ static NativeSymbol raycart_native_symbols[raycart_native_symbols_count] = {
     {"ImageColorContrast", raycart_ImageColorContrast, "(*f)"},
     {"ImageColorBrightness", raycart_ImageColorBrightness, "(*i)"},
     {"ImageColorReplace", raycart_ImageColorReplace, "(***)"},
-    {"LoadImageColors", raycart_LoadImageColors, "(**)"},
-    {"LoadImagePalette", raycart_LoadImagePalette, "(**i*)"},
     {"UnloadImageColors", raycart_UnloadImageColors, "(*)"},
     {"UnloadImagePalette", raycart_UnloadImagePalette, "(*)"},
     {"GetImageAlphaBorder", raycart_GetImageAlphaBorder, "(**f)"},
@@ -2658,9 +2864,9 @@ static NativeSymbol raycart_native_symbols[raycart_native_symbols_count] = {
     {"GetPixelDataSize", raycart_GetPixelDataSize, "(iii)i"},
     {"GetFontDefault", raycart_GetFontDefault, "(*)"},
     {"LoadFont", raycart_LoadFont, "(*$)"},
-    {"LoadFontEx", raycart_LoadFontEx, "(*$i*i)"},
+    {"LoadFontEx", raycart_LoadFontEx, "(*$iii)"},
     {"LoadFontFromImage", raycart_LoadFontFromImage, "(***i)"},
-    {"LoadFontFromMemory", raycart_LoadFontFromMemory, "(*$$ii*i)"},
+    {"LoadFontFromMemory", raycart_LoadFontFromMemory, "(*$$iiii)"},
     {"IsFontValid", raycart_IsFontValid, "(*)i"},
     {"GenImageFontAtlas", raycart_GenImageFontAtlas, "(***iiii)"},
     {"UnloadFontData", raycart_UnloadFontData, "(*i)"},
@@ -2671,22 +2877,22 @@ static NativeSymbol raycart_native_symbols[raycart_native_symbols_count] = {
     {"DrawTextEx", raycart_DrawTextEx, "(*$*ff*)"},
     {"DrawTextPro", raycart_DrawTextPro, "(*$**fff*)"},
     {"DrawTextCodepoint", raycart_DrawTextCodepoint, "(*i*f*)"},
-    {"DrawTextCodepoints", raycart_DrawTextCodepoints, "(**i*ff*)"},
+    {"DrawTextCodepoints", raycart_DrawTextCodepoints, "(*ii*ff*)"},
     {"SetTextLineSpacing", raycart_SetTextLineSpacing, "(i)"},
     {"MeasureText", raycart_MeasureText, "($i)i"},
     {"MeasureTextEx", raycart_MeasureTextEx, "(**$ff)"},
     {"GetGlyphIndex", raycart_GetGlyphIndex, "(*i)i"},
     {"GetGlyphInfo", raycart_GetGlyphInfo, "(**i)"},
     {"GetGlyphAtlasRec", raycart_GetGlyphAtlasRec, "(**i)"},
-    {"LoadUTF8", raycart_LoadUTF8, "(*i)$"},
+    {"LoadUTF8", raycart_LoadUTF8, "(ii)$"},
     {"UnloadUTF8", raycart_UnloadUTF8, "($)"},
-    {"LoadCodepoints", raycart_LoadCodepoints, "($*)*"},
-    {"UnloadCodepoints", raycart_UnloadCodepoints, "(*)"},
+    {"LoadCodepoints", raycart_LoadCodepoints, "($i)i"},
+    {"UnloadCodepoints", raycart_UnloadCodepoints, "(i)"},
     {"GetCodepointCount", raycart_GetCodepointCount, "($)i"},
-    {"GetCodepoint", raycart_GetCodepoint, "($*)i"},
-    {"GetCodepointNext", raycart_GetCodepointNext, "($*)i"},
-    {"GetCodepointPrevious", raycart_GetCodepointPrevious, "($*)i"},
-    {"CodepointToUTF8", raycart_CodepointToUTF8, "(i*)$"},
+    {"GetCodepoint", raycart_GetCodepoint, "($i)i"},
+    {"GetCodepointNext", raycart_GetCodepointNext, "($i)i"},
+    {"GetCodepointPrevious", raycart_GetCodepointPrevious, "($i)i"},
+    {"CodepointToUTF8", raycart_CodepointToUTF8, "(ii)$"},
     {"TextCopy", raycart_TextCopy, "($$)i"},
     {"TextIsEqual", raycart_TextIsEqual, "($$)i"},
     {"TextLength", raycart_TextLength, "($)i"},
@@ -2694,8 +2900,8 @@ static NativeSymbol raycart_native_symbols[raycart_native_symbols_count] = {
     {"TextReplace", raycart_TextReplace, "($$$)$"},
     {"TextInsert", raycart_TextInsert, "($$i)$"},
     {"TextJoin", raycart_TextJoin, "($i$)$"},
-    {"TextSplit", raycart_TextSplit, "($i*)$"},
-    {"TextAppend", raycart_TextAppend, "($$*)"},
+    {"TextSplit", raycart_TextSplit, "($ii)$"},
+    {"TextAppend", raycart_TextAppend, "($$i)"},
     {"TextFindIndex", raycart_TextFindIndex, "($$)i"},
     {"TextToUpper", raycart_TextToUpper, "($)$"},
     {"TextToLower", raycart_TextToLower, "($)$"},
@@ -2760,13 +2966,11 @@ static NativeSymbol raycart_native_symbols[raycart_native_symbols_count] = {
     {"GenMeshKnot", raycart_GenMeshKnot, "(*ffii)"},
     {"GenMeshHeightmap", raycart_GenMeshHeightmap, "(***)"},
     {"GenMeshCubicmap", raycart_GenMeshCubicmap, "(***)"},
-    {"LoadMaterials", raycart_LoadMaterials, "(*$*)"},
     {"LoadMaterialDefault", raycart_LoadMaterialDefault, "(*)"},
     {"IsMaterialValid", raycart_IsMaterialValid, "(*)i"},
     {"UnloadMaterial", raycart_UnloadMaterial, "(*)"},
     {"SetMaterialTexture", raycart_SetMaterialTexture, "(*i*)"},
     {"SetModelMeshMaterial", raycart_SetModelMeshMaterial, "(*ii)"},
-    {"LoadModelAnimations", raycart_LoadModelAnimations, "(*$*)"},
     {"UpdateModelAnimation", raycart_UpdateModelAnimation, "(**i)"},
     {"UpdateModelAnimationBones", raycart_UpdateModelAnimationBones, "(**i)"},
     {"UnloadModelAnimation", raycart_UnloadModelAnimation, "(*)"},
@@ -2809,8 +3013,8 @@ static NativeSymbol raycart_native_symbols[raycart_native_symbols_count] = {
     {"WaveCopy", raycart_WaveCopy, "(**)"},
     {"WaveCrop", raycart_WaveCrop, "(*ii)"},
     {"WaveFormat", raycart_WaveFormat, "(*iii)"},
-    {"LoadWaveSamples", raycart_LoadWaveSamples, "(*)*"},
-    {"UnloadWaveSamples", raycart_UnloadWaveSamples, "(*)"},
+    {"LoadWaveSamples", raycart_LoadWaveSamples, "(*)i"},
+    {"UnloadWaveSamples", raycart_UnloadWaveSamples, "(i)"},
     {"LoadMusicStream", raycart_LoadMusicStream, "(*$)"},
     {"LoadMusicStreamFromMemory", raycart_LoadMusicStreamFromMemory, "(*$$i)"},
     {"IsMusicValid", raycart_IsMusicValid, "(*)i"},
@@ -2840,7 +3044,11 @@ static NativeSymbol raycart_native_symbols[raycart_native_symbols_count] = {
     {"SetAudioStreamVolume", raycart_SetAudioStreamVolume, "(*f)"},
     {"SetAudioStreamPitch", raycart_SetAudioStreamPitch, "(*f)"},
     {"SetAudioStreamPan", raycart_SetAudioStreamPan, "(*f)"},
-    {"SetAudioStreamBufferSizeDefault", raycart_SetAudioStreamBufferSizeDefault, "(i)"}
+    {"SetAudioStreamBufferSizeDefault", raycart_SetAudioStreamBufferSizeDefault, "(i)"},
+    {"LoadModelAnimations", raycart_LoadModelAnimations, "(i$i)"},
+    {"LoadMaterials", raycart_LoadMaterials, "(i$i)"},
+    {"LoadImageColors", raycart_LoadImageColors, "(i*)"},
+    {"LoadImagePalette", raycart_LoadImagePalette, "(i*ii)"}
 };
 
 bool CartInit(char *wasmBytes, int wasmSize) {

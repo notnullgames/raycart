@@ -1786,12 +1786,6 @@ void ImageColorBrightness(Image * image, int brightness);
 RC_IMPORT("ImageColorReplace")
 void ImageColorReplace(Image * image, Color color, Color replace);
 
-RC_IMPORT("LoadImageColors")
-Color * LoadImageColors(Image image);
-
-RC_IMPORT("LoadImagePalette")
-Color * LoadImagePalette(Image image, int maxPaletteSize, int * colorCount);
-
 RC_IMPORT("UnloadImageColors")
 void UnloadImageColors(Color * colors);
 
@@ -2293,9 +2287,6 @@ Mesh GenMeshHeightmap(Image heightmap, Vector3 size);
 RC_IMPORT("GenMeshCubicmap")
 Mesh GenMeshCubicmap(Image cubicmap, Vector3 cubeSize);
 
-RC_IMPORT("LoadMaterials")
-Material * LoadMaterials(const char * fileName, int * materialCount);
-
 RC_IMPORT("LoadMaterialDefault")
 Material LoadMaterialDefault(void);
 
@@ -2310,9 +2301,6 @@ void SetMaterialTexture(Material * material, int mapType, Texture2D texture);
 
 RC_IMPORT("SetModelMeshMaterial")
 void SetModelMeshMaterial(Model * model, int meshId, int materialId);
-
-RC_IMPORT("LoadModelAnimations")
-ModelAnimation * LoadModelAnimations(const char * fileName, int * animCount);
 
 RC_IMPORT("UpdateModelAnimation")
 void UpdateModelAnimation(Model model, ModelAnimation anim, int frame);
@@ -2535,3 +2523,47 @@ void SetAudioStreamPan(AudioStream stream, float pan);
 
 RC_IMPORT("SetAudioStreamBufferSizeDefault")
 void SetAudioStreamBufferSizeDefault(int size);
+
+//----------------------------------------------------------------------------------
+// Manual function wrappers for complex pointer patterns
+//----------------------------------------------------------------------------------
+
+// LoadModelAnimations returns pointer to array, manually wrapped
+RC_IMPORT("LoadModelAnimations")
+void __raycart_LoadModelAnimations(uint32_t *result, const char *fileName, int *animCount);
+
+static inline ModelAnimation *LoadModelAnimations(const char *fileName, int *animCount) {
+    uint32_t result;
+    __raycart_LoadModelAnimations(&result, fileName, animCount);
+    return (ModelAnimation *)(uintptr_t)result;
+}
+
+// LoadMaterials returns pointer to array, manually wrapped
+RC_IMPORT("LoadMaterials")
+void __raycart_LoadMaterials(uint32_t *result, const char *fileName, int *materialCount);
+
+static inline Material *LoadMaterials(const char *fileName, int *materialCount) {
+    uint32_t result;
+    __raycart_LoadMaterials(&result, fileName, materialCount);
+    return (Material *)(uintptr_t)result;
+}
+
+// LoadImageColors returns pointer to array, manually wrapped
+RC_IMPORT("LoadImageColors")
+void __raycart_LoadImageColors(uint32_t *result, Image image);
+
+static inline Color *LoadImageColors(Image image) {
+    uint32_t result;
+    __raycart_LoadImageColors(&result, image);
+    return (Color *)(uintptr_t)result;
+}
+
+// LoadImagePalette returns pointer to array, manually wrapped
+RC_IMPORT("LoadImagePalette")
+void __raycart_LoadImagePalette(uint32_t *result, Image image, int maxPaletteSize, int *colorCount);
+
+static inline Color *LoadImagePalette(Image image, int maxPaletteSize, int *colorCount) {
+    uint32_t result;
+    __raycart_LoadImagePalette(&result, image, maxPaletteSize, colorCount);
+    return (Color *)(uintptr_t)result;
+}

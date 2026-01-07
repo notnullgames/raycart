@@ -50,22 +50,15 @@ function getTypeName(type) {
   return resolveAlias(cleanType)
 }
 
-// Map raylib functions to their PhysFS equivalents
-// Note: LoadFont is not mapped because LoadFontFromPhysFS has a different signature
-const physFSFunctionMap = {
-  DirectoryExists: 'DirectoryExistsInPhysFS',
-  FileExists: 'FileExistsInPhysFS',
-  GetFileModTime: 'GetFileModTimeFromPhysFS',
-  LoadDirectoryFiles: 'LoadDirectoryFilesFromPhysFS',
-  LoadFileData: 'LoadFileDataFromPhysFS',
-  LoadFileText: 'LoadFileTextFromPhysFS',
-  LoadImage: 'LoadImageFromPhysFS',
-  LoadMusicStream: 'LoadMusicStreamFromPhysFS',
-  LoadShader: 'LoadShaderFromPhysFS',
-  LoadTexture: 'LoadTextureFromPhysFS',
-  LoadWave: 'LoadWaveFromPhysFS',
-  SaveFileData: 'SaveFileDataToPhysFS',
-  SaveFileText: 'SaveFileTextToPhysFS'
+// Check if type is a primitive pointer (int*, float*, etc.) - these need manual conversion in WAMR
+function isPrimitivePointer(type) {
+  if (!isPointer(type)) return false
+  const cleanType = type.replace(/const\s+/, '').replace(/\*/g, '').trim()
+  const primitives = ['int', 'unsigned int', 'float', 'double', 'bool', 'char', 'unsigned char',
+                      'short', 'unsigned short', 'long', 'unsigned long',
+                      'int8_t', 'uint8_t', 'int16_t', 'uint16_t', 'int32_t', 'uint32_t',
+                      'int64_t', 'uint64_t']
+  return primitives.includes(cleanType) || cleanType.match(/int\d+/) || cleanType.match(/uint\d+/)
 }
 
 // Functions to exclude from the API
@@ -104,7 +97,13 @@ const functionsToExclude = [
   'GetTextBetween',
   'TextReplaceBetween',
   'GetKeyName', // Not in this raylib version
-  'LoadFontData' // Parameter mismatch between JSON and actual raylib
+  'LoadFontData', // Parameter mismatch between JSON and actual raylib
+
+  // Functions with complex pointer returns + pointer params that WAMR can't handle
+  'LoadModelAnimations',
+  'LoadMaterials',
+  'LoadImageColors',
+  'LoadImagePalette'
 ]
 
 // Map C types to WAMR signature characters
@@ -112,6 +111,8 @@ function getWAMRTypeChar(type) {
   const cleanType = type.replace(/const\s+/, '').trim()
 
   if (isString(cleanType)) return '$' // string
+  // Primitive pointers (int*, float*, etc.) are passed as int (WASM address) and converted manually
+  if (isPrimitivePointer(cleanType)) return 'i'
   if (isPointer(cleanType)) return '*' // pointer (struct or other)
 
   // Primitive types
@@ -135,11 +136,11 @@ function getWAMRTypeChar(type) {
 // Generate WAMR function signature
 function generateWAMRSignature(func) {
   const params = func.params || []
-  const returnsStruct = isStruct(func.returnType)
+  const returnsStruct = isStruct(func.returnType) && !isPointer(func.returnType)
 
   let paramSig = ''
 
-  // If returning struct, first param is result pointer
+  // If returning struct by value, first param is result pointer
   if (returnsStruct) {
     paramSig += '*'
   }
@@ -158,11 +159,11 @@ function generateWAMRSignature(func) {
 // Generate C parameter list for wrapper function
 function generateParamList(func) {
   const params = func.params || []
-  const returnsStruct = isStruct(func.returnType)
+  const returnsStruct = isStruct(func.returnType) && !isPointer(func.returnType)
 
   let paramList = ['wasm_exec_env_t exec_env']
 
-  // If returning struct, first param is result pointer
+  // If returning struct by value, first param is result pointer
   if (returnsStruct) {
     paramList.push(`${func.returnType}* __result`)
   }
@@ -171,8 +172,16 @@ function generateParamList(func) {
   for (const param of params) {
     let paramType = param.type.trim()
 
+    // Strings are handled specially by WAMR
+    if (isString(paramType)) {
+      paramList.push(`${paramType} ${param.name}`)
+    }
+    // Primitive pointers are passed as WASM addresses (uint32_t)
+    else if (isPrimitivePointer(paramType)) {
+      paramList.push(`uint32_t ${param.name}`)
+    }
     // Structs are passed by pointer in WAMR
-    if (isStruct(paramType) && !isPointer(paramType)) {
+    else if (isStruct(paramType) && !isPointer(paramType)) {
       const typeName = getTypeName(paramType)
       paramList.push(`${typeName}* ${param.name}`)
     } else {
@@ -186,14 +195,30 @@ function generateParamList(func) {
 // Generate function call with proper parameter handling
 function generateFunctionCall(func) {
   const params = func.params || []
-  const returnsStruct = isStruct(func.returnType)
-  const funcName = physFSFunctionMap[func.name] || func.name
+  const returnsStruct = isStruct(func.returnType) && !isPointer(func.returnType)
+  const hasPrimitivePointers = params.some(p => isPrimitivePointer(p.type))
 
+  let lines = []
   let callParams = []
 
-  // Add parameters, dereferencing struct pointers
+  // If we have primitive pointers, we need module_inst for conversion
+  if (hasPrimitivePointers) {
+    lines.push('wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);')
+  }
+
+  // Add parameters, converting primitive pointers and dereferencing struct pointers
   for (const param of params) {
-    if (isStruct(param.type) && !isPointer(param.type)) {
+    // Strings are handled automatically by WAMR, don't convert
+    if (isString(param.type)) {
+      callParams.push(param.name)
+    }
+    else if (isPrimitivePointer(param.type)) {
+      // Convert WASM address to native pointer
+      const nativeName = `${param.name}_native`
+      const cleanType = param.type.replace(/const\s+/, '').trim()
+      lines.push(`    ${cleanType} ${nativeName} = (${cleanType})wasm_runtime_addr_app_to_native(module_inst, ${param.name});`)
+      callParams.push(nativeName)
+    } else if (isStruct(param.type) && !isPointer(param.type)) {
       // Dereference struct pointer
       callParams.push(`*${param.name}`)
     } else {
@@ -205,17 +230,20 @@ function generateFunctionCall(func) {
 
   if (returnsStruct) {
     // Assign struct return value to result pointer
-    return `*__result = ${funcName}(${callParamsStr});`
+    lines.push(`*__result = ${func.name}(${callParamsStr});`)
+    return lines.join('\n    ')
   } else if (func.returnType === 'void') {
-    return `${funcName}(${callParamsStr});`
+    lines.push(`${func.name}(${callParamsStr});`)
+    return lines.join('\n    ')
   } else {
-    return `return ${funcName}(${callParamsStr});`
+    lines.push(`return ${func.name}(${callParamsStr});`)
+    return lines.join('\n    ')
   }
 }
 
 // Generate wrapper function
 function generateWrapperFunction(func) {
-  const returnsStruct = isStruct(func.returnType)
+  const returnsStruct = isStruct(func.returnType) && !isPointer(func.returnType)
   const returnType = returnsStruct ? 'void' : func.returnType
 
   const paramList = generateParamList(func)
@@ -248,6 +276,7 @@ function generateHostNative() {
 #include "wamr_wasi_physfs.h"
 #include "wasm_export.h"
 #include <stddef.h>
+#include <string.h>
 
 // TODO: make sure these mem-sizes match web-host, so you have a known amount of RAM
 static uint32_t stack_size = 1024 * 1024 * 10; // 10 MB
@@ -264,9 +293,108 @@ static wasm_function_inst_t cart_callback_close = NULL;
 // Generated raylib wrapper functions
 ${wrapperFunctions}
 
-#define raycart_native_symbols_count ${filteredFunctions.length}
+// Manual wrappers for functions with complex pointer patterns
+// TODO: LoadModelAnimations requires deep copying of nested pointer structures
+// (name, bones, framePoses). For now, return NULL to prevent crashes.
+static void raycart_LoadModelAnimations(wasm_exec_env_t exec_env, uint32_t result_ptr, const char *fileName, uint32_t animCount) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
+    int *animCount_native = (int *)wasm_runtime_addr_app_to_native(module_inst, animCount);
+
+    // Set count to 0 and return NULL
+    *animCount_native = 0;
+    uint32_t *result_wasm = (uint32_t *)wasm_runtime_addr_app_to_native(module_inst, result_ptr);
+    *result_wasm = 0;
+
+    TraceLog(LOG_WARNING, "LoadModelAnimations not fully implemented (requires deep copy of nested pointers)");
+}
+
+static void raycart_LoadMaterials(wasm_exec_env_t exec_env, uint32_t result_ptr, const char *fileName, uint32_t materialCount) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
+    int *materialCount_native = (int *)wasm_runtime_addr_app_to_native(module_inst, materialCount);
+
+    Material *result = LoadMaterials(fileName, materialCount_native);
+
+    if (result && *materialCount_native > 0) {
+        uint32_t wasm_size = sizeof(Material) * (*materialCount_native);
+        uint32_t wasm_ptr = wasm_runtime_module_malloc(module_inst, wasm_size, NULL);
+
+        if (wasm_ptr) {
+            Material *wasm_array = (Material *)wasm_runtime_addr_app_to_native(module_inst, wasm_ptr);
+            memcpy(wasm_array, result, wasm_size);
+
+            uint32_t *result_wasm = (uint32_t *)wasm_runtime_addr_app_to_native(module_inst, result_ptr);
+            *result_wasm = wasm_ptr;
+        } else {
+            uint32_t *result_wasm = (uint32_t *)wasm_runtime_addr_app_to_native(module_inst, result_ptr);
+            *result_wasm = 0;
+        }
+    } else {
+        uint32_t *result_wasm = (uint32_t *)wasm_runtime_addr_app_to_native(module_inst, result_ptr);
+        *result_wasm = 0;
+    }
+}
+
+static void raycart_LoadImageColors(wasm_exec_env_t exec_env, uint32_t result_ptr, Image *image) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
+
+    Color *result = LoadImageColors(*image);
+
+    if (result) {
+        // Image width * height gives us the number of colors
+        uint32_t wasm_size = sizeof(Color) * image->width * image->height;
+        uint32_t wasm_ptr = wasm_runtime_module_malloc(module_inst, wasm_size, NULL);
+
+        if (wasm_ptr) {
+            Color *wasm_array = (Color *)wasm_runtime_addr_app_to_native(module_inst, wasm_ptr);
+            memcpy(wasm_array, result, wasm_size);
+
+            uint32_t *result_wasm = (uint32_t *)wasm_runtime_addr_app_to_native(module_inst, result_ptr);
+            *result_wasm = wasm_ptr;
+        } else {
+            uint32_t *result_wasm = (uint32_t *)wasm_runtime_addr_app_to_native(module_inst, result_ptr);
+            *result_wasm = 0;
+        }
+        UnloadImageColors(result);
+    } else {
+        uint32_t *result_wasm = (uint32_t *)wasm_runtime_addr_app_to_native(module_inst, result_ptr);
+        *result_wasm = 0;
+    }
+}
+
+static void raycart_LoadImagePalette(wasm_exec_env_t exec_env, uint32_t result_ptr, Image *image, int maxPaletteSize, uint32_t colorCount) {
+    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
+    int *colorCount_native = (int *)wasm_runtime_addr_app_to_native(module_inst, colorCount);
+
+    Color *result = LoadImagePalette(*image, maxPaletteSize, colorCount_native);
+
+    if (result && *colorCount_native > 0) {
+        uint32_t wasm_size = sizeof(Color) * (*colorCount_native);
+        uint32_t wasm_ptr = wasm_runtime_module_malloc(module_inst, wasm_size, NULL);
+
+        if (wasm_ptr) {
+            Color *wasm_array = (Color *)wasm_runtime_addr_app_to_native(module_inst, wasm_ptr);
+            memcpy(wasm_array, result, wasm_size);
+
+            uint32_t *result_wasm = (uint32_t *)wasm_runtime_addr_app_to_native(module_inst, result_ptr);
+            *result_wasm = wasm_ptr;
+        } else {
+            uint32_t *result_wasm = (uint32_t *)wasm_runtime_addr_app_to_native(module_inst, result_ptr);
+            *result_wasm = 0;
+        }
+        UnloadImagePalette(result);
+    } else {
+        uint32_t *result_wasm = (uint32_t *)wasm_runtime_addr_app_to_native(module_inst, result_ptr);
+        *result_wasm = 0;
+    }
+}
+
+#define raycart_native_symbols_count ${filteredFunctions.length + 4}
 static NativeSymbol raycart_native_symbols[raycart_native_symbols_count] = {
-${nativeSymbols}
+${nativeSymbols},
+    {"LoadModelAnimations", raycart_LoadModelAnimations, "(i$i)"},
+    {"LoadMaterials", raycart_LoadMaterials, "(i$i)"},
+    {"LoadImageColors", raycart_LoadImageColors, "(i*)"},
+    {"LoadImagePalette", raycart_LoadImagePalette, "(i*ii)"}
 };
 
 bool CartInit(char *wasmBytes, int wasmSize) {
