@@ -162,5 +162,8 @@ BUILD_CART_C("core_basic_window")
 BUILD_CART_C("textures_logo")
 BUILD_CART_C("tetris")
 BUILD_CART_C("shapes_colors_palette")
+BUILD_CART_C("models_loading_gltf")
+
+
 
 BUILD_CART_JS("core_basic_window")
