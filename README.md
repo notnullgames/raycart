@@ -49,9 +49,6 @@ npm run build:native
 # build only carts
 npm run build:carts
 
-# build both carts & native host
-npm run build:nativefull
-
 # build only web runtime
 npm run build:web
 
