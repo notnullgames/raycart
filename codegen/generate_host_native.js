@@ -53,11 +53,11 @@ function getTypeName(type) {
 // Check if type is a primitive pointer (int*, float*, etc.) - these need manual conversion in WAMR
 function isPrimitivePointer(type) {
   if (!isPointer(type)) return false
-  const cleanType = type.replace(/const\s+/, '').replace(/\*/g, '').trim()
-  const primitives = ['int', 'unsigned int', 'float', 'double', 'bool', 'char', 'unsigned char',
-                      'short', 'unsigned short', 'long', 'unsigned long',
-                      'int8_t', 'uint8_t', 'int16_t', 'uint16_t', 'int32_t', 'uint32_t',
-                      'int64_t', 'uint64_t']
+  const cleanType = type
+    .replace(/const\s+/, '')
+    .replace(/\*/g, '')
+    .trim()
+  const primitives = ['int', 'unsigned int', 'float', 'double', 'bool', 'char', 'unsigned char', 'short', 'unsigned short', 'long', 'unsigned long', 'int8_t', 'uint8_t', 'int16_t', 'uint16_t', 'int32_t', 'uint32_t', 'int64_t', 'uint64_t']
   return primitives.includes(cleanType) || cleanType.match(/int\d+/) || cleanType.match(/uint\d+/)
 }
 
@@ -203,7 +203,7 @@ function generateParamList(func) {
 function generateFunctionCall(func) {
   const params = func.params || []
   const returnsStruct = isStruct(func.returnType) && !isPointer(func.returnType)
-  const hasPrimitivePointers = params.some(p => isPrimitivePointer(p.type))
+  const hasPrimitivePointers = params.some((p) => isPrimitivePointer(p.type))
 
   let lines = []
   let callParams = []
@@ -218,8 +218,7 @@ function generateFunctionCall(func) {
     // Strings are handled automatically by WAMR, don't convert
     if (isString(param.type)) {
       callParams.push(param.name)
-    }
-    else if (isPrimitivePointer(param.type)) {
+    } else if (isPrimitivePointer(param.type)) {
       // Convert WASM address to native pointer
       const nativeName = `${param.name}_native`
       const cleanType = param.type.replace(/const\s+/, '').trim()
@@ -652,9 +651,6 @@ bool CartInit(char *wasmBytes, int wasmSize) {
       TraceLog(LOG_WARNING, wasm_runtime_get_exception(module_inst));
     }
   }
-
-  // this makes it match web
-  SetTargetFPS(60);
 
   TraceLog(LOG_INFO, "Native wasm-host loaded.");
 

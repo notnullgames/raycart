@@ -8,15 +8,6 @@ extern bool CartInit(char *wasmBuffer, int bytesRead);
 extern bool CartUpdate();
 extern void CartClose();
 
-#ifdef EMSCRIPTEN
-#include "emscripten.h"
-void CartUpdateWrapper() {
-    if (!CartUpdate()) {
-        emscripten_cancel_main_loop();
-    }
-}
-#endif
-
 int main(int argc, char *argv[]) {
     if (argc < 2) {
         TraceLog(LOG_FATAL, "Usage: %s <ZIP_FILE>", argv[0]);
@@ -65,14 +56,11 @@ int main(int argc, char *argv[]) {
 
     bool r = CartInit(wasmBuffer, bytes_read);
     MemFree(wasmBuffer);
+
+    SetTargetFPS(60);
     
     if (r) {
-        // WindowShouldClose works on emscripten too (via asyncify) but this is a bit lighter 
-        #ifndef EMSCRIPTEN
         while (!WindowShouldClose() && CartUpdate()) {}
-        #else
-        emscripten_set_main_loop(CartUpdateWrapper, 60, true);
-        #endif
     }
 
     CartClose();

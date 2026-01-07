@@ -4403,8 +4403,6 @@ EM_ASYNC_JS(bool, CartInit, (char *wasmBuffer, int bytesRead), {
     const cart = Module.cart = instance.exports;
     Module.wasi_snapshot_preview1.start(cart);
 
-    console.log('CART', cart);
-
     cart?.CartInit && cart.CartInit();
 
     return true;

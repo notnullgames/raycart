@@ -3280,9 +3280,6 @@ bool CartInit(char *wasmBytes, int wasmSize) {
     }
   }
 
-  // this makes it match web
-  SetTargetFPS(60);
-
   TraceLog(LOG_INFO, "Native wasm-host loaded.");
 
   return true;

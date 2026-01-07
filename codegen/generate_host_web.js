@@ -100,7 +100,7 @@ function structHasPointers(structName) {
 
   for (const field of struct.fields) {
     if (isPointer(field.type) && !field.type.match(/char\s*\*/)) {
-      return true  // Has pointer field (excluding strings)
+      return true // Has pointer field (excluding strings)
     }
   }
   return false
@@ -348,8 +348,6 @@ ${functionBindings}
     const { instance } = await WebAssembly.instantiate(wasmBytes, {raycart, wasi_snapshot_preview1: Module.wasi_snapshot_preview1});
     const cart = Module.cart = instance.exports;
     Module.wasi_snapshot_preview1.start(cart);
-
-    console.log('CART', cart);
 
     cart?.CartInit && cart.CartInit();
 
