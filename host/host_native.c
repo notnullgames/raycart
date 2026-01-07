@@ -2083,24 +2083,8 @@ static void raycart_SetModelMeshMaterial(wasm_exec_env_t exec_env, Model * model
     SetModelMeshMaterial(model, meshId, materialId);
 }
 
-static void raycart_UpdateModelAnimation(wasm_exec_env_t exec_env, Model* model, ModelAnimation* anim, int frame) {
-    UpdateModelAnimation(*model, *anim, frame);
-}
-
-static void raycart_UpdateModelAnimationBones(wasm_exec_env_t exec_env, Model* model, ModelAnimation* anim, int frame) {
-    UpdateModelAnimationBones(*model, *anim, frame);
-}
-
-static void raycart_UnloadModelAnimation(wasm_exec_env_t exec_env, ModelAnimation* anim) {
-    UnloadModelAnimation(*anim);
-}
-
 static void raycart_UnloadModelAnimations(wasm_exec_env_t exec_env, ModelAnimation * animations, int animCount) {
     UnloadModelAnimations(animations, animCount);
-}
-
-static bool raycart_IsModelAnimationValid(wasm_exec_env_t exec_env, Model* model, ModelAnimation* anim) {
-    return IsModelAnimationValid(*model, *anim);
 }
 
 static bool raycart_CheckCollisionSpheres(wasm_exec_env_t exec_env, Vector3* center1, float radius1, Vector3* center2, float radius2) {
@@ -2388,42 +2372,191 @@ static void raycart_SetAudioStreamBufferSizeDefault(wasm_exec_env_t exec_env, in
     SetAudioStreamBufferSizeDefault(size);
 }
 
+// Deep copy helper for ModelAnimation with nested pointer structures
+// WASM32 ModelAnimation struct layout (48 bytes total):
+//   int boneCount      (4 bytes, offset 0)
+//   int frameCount     (4 bytes, offset 4)
+//   BoneInfo *bones    (4 bytes, offset 8)  - 32-bit pointer in WASM
+//   Transform **framePoses (4 bytes, offset 12) - 32-bit pointer in WASM
+//   char name[32]      (32 bytes, offset 16)
+#define WASM_MODELANIMATION_SIZE 48
+#define WASM_MODELANIMATION_BONECOUNT_OFFSET 0
+#define WASM_MODELANIMATION_FRAMECOUNT_OFFSET 4
+#define WASM_MODELANIMATION_BONES_OFFSET 8
+#define WASM_MODELANIMATION_FRAMEPOSES_OFFSET 12
+#define WASM_MODELANIMATION_NAME_OFFSET 16
+
+static uint32_t DeepCopyModelAnimationsToWASM(wasm_module_inst_t module_inst, ModelAnimation *animations, int count) {
+    if (!animations || count <= 0) return 0;
+
+    // Calculate total memory needed
+    uint32_t total_size = WASM_MODELANIMATION_SIZE * count;
+
+    // Add memory for bones and framePoses for each animation
+    for (int i = 0; i < count; i++) {
+        ModelAnimation *anim = &animations[i];
+        total_size += sizeof(BoneInfo) * anim->boneCount;
+        total_size += sizeof(uint32_t) * anim->frameCount;  // Array of 32-bit pointers
+        total_size += sizeof(Transform) * anim->frameCount * anim->boneCount;
+    }
+
+    // Allocate one contiguous block in WASM memory
+    uint32_t wasm_base = wasm_runtime_module_malloc(module_inst, total_size, NULL);
+    if (!wasm_base) {
+        TraceLog(LOG_ERROR, "Failed to allocate %u bytes in WASM memory for animations", total_size);
+        return 0;
+    }
+
+    uint8_t *wasm_mem = (uint8_t *)wasm_runtime_addr_app_to_native(module_inst, wasm_base);
+    uint32_t offset = 0;
+
+    // Write ModelAnimation structs using WASM32 struct layout
+    for (int i = 0; i < count; i++) {
+        uint8_t *anim_ptr = wasm_mem + offset + (i * WASM_MODELANIMATION_SIZE);
+
+        // Write fields at correct offsets for WASM32
+        *(int32_t *)(anim_ptr + WASM_MODELANIMATION_BONECOUNT_OFFSET) = animations[i].boneCount;
+        *(int32_t *)(anim_ptr + WASM_MODELANIMATION_FRAMECOUNT_OFFSET) = animations[i].frameCount;
+        *(uint32_t *)(anim_ptr + WASM_MODELANIMATION_BONES_OFFSET) = 0;  // Set below
+        *(uint32_t *)(anim_ptr + WASM_MODELANIMATION_FRAMEPOSES_OFFSET) = 0;  // Set below
+        memcpy(anim_ptr + WASM_MODELANIMATION_NAME_OFFSET, animations[i].name, 32);
+    }
+    offset += WASM_MODELANIMATION_SIZE * count;
+
+    // Deep copy nested data for each animation
+    for (int i = 0; i < count; i++) {
+        ModelAnimation *src_anim = &animations[i];
+        uint8_t *dst_anim_ptr = wasm_mem + (i * WASM_MODELANIMATION_SIZE);
+
+        // Copy bones array
+        if (src_anim->bones && src_anim->boneCount > 0) {
+            BoneInfo *wasm_bones = (BoneInfo *)(wasm_mem + offset);
+            memcpy(wasm_bones, src_anim->bones, sizeof(BoneInfo) * src_anim->boneCount);
+            // Store WASM pointer
+            *(uint32_t *)(dst_anim_ptr + WASM_MODELANIMATION_BONES_OFFSET) = wasm_base + offset;
+            offset += sizeof(BoneInfo) * src_anim->boneCount;
+        }
+
+        // Copy framePoses (2D array)
+        if (src_anim->framePoses && src_anim->frameCount > 0 && src_anim->boneCount > 0) {
+            uint32_t *wasm_frame_ptrs = (uint32_t *)(wasm_mem + offset);
+            uint32_t frame_ptrs_offset = offset;
+            offset += sizeof(uint32_t) * src_anim->frameCount;
+
+            // Copy each frame's Transform array
+            for (int f = 0; f < src_anim->frameCount; f++) {
+                Transform *wasm_transforms = (Transform *)(wasm_mem + offset);
+                memcpy(wasm_transforms, src_anim->framePoses[f], sizeof(Transform) * src_anim->boneCount);
+                wasm_frame_ptrs[f] = wasm_base + offset;
+                offset += sizeof(Transform) * src_anim->boneCount;
+            }
+
+            // Store framePoses pointer
+            *(uint32_t *)(dst_anim_ptr + WASM_MODELANIMATION_FRAMEPOSES_OFFSET) = wasm_base + frame_ptrs_offset;
+        }
+    }
+
+    TraceLog(LOG_INFO, "Deep copied %d animation(s) to WASM memory (%u bytes total)", count, total_size);
+    return wasm_base;
+}
+
 // Manual wrappers for functions with complex pointer patterns
-// TODO: LoadModelAnimations requires deep copying of nested pointer structures
-// (name, bones, framePoses). For now, return NULL to prevent crashes.
 static void raycart_LoadModelAnimations(wasm_exec_env_t exec_env, uint32_t result_ptr, const char *fileName, uint32_t animCount) {
     wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     int *animCount_native = (int *)wasm_runtime_addr_app_to_native(module_inst, animCount);
 
-    // Set count to 0 and return NULL
-    *animCount_native = 0;
-    uint32_t *result_wasm = (uint32_t *)wasm_runtime_addr_app_to_native(module_inst, result_ptr);
-    *result_wasm = 0;
+    // Load animations in host memory
+    ModelAnimation *host_anims = LoadModelAnimations(fileName, animCount_native);
 
-    TraceLog(LOG_WARNING, "LoadModelAnimations not fully implemented (requires deep copy of nested pointers)");
+    if (host_anims && *animCount_native > 0) {
+        // Deep copy to WASM memory
+        uint32_t wasm_ptr = DeepCopyModelAnimationsToWASM(module_inst, host_anims, *animCount_native);
+
+        // Free host memory
+        UnloadModelAnimations(host_anims, *animCount_native);
+
+        // Return WASM pointer
+        uint32_t *result_wasm = (uint32_t *)wasm_runtime_addr_app_to_native(module_inst, result_ptr);
+        *result_wasm = wasm_ptr;
+    } else {
+        // Load failed or no animations
+        *animCount_native = 0;
+        uint32_t *result_wasm = (uint32_t *)wasm_runtime_addr_app_to_native(module_inst, result_ptr);
+        *result_wasm = 0;
+    }
+}
+
+// Deep copy helper for Material with nested MaterialMap array
+static uint32_t DeepCopyMaterialsToWASM(wasm_module_inst_t module_inst, Material *materials, int count) {
+    if (!materials || count <= 0) return 0;
+
+    #define MAX_MATERIAL_MAPS 12
+
+    // Calculate total memory needed
+    uint32_t total_size = sizeof(Material) * count;
+    // Each Material has a maps pointer to MAX_MATERIAL_MAPS MaterialMaps
+    total_size += sizeof(MaterialMap) * MAX_MATERIAL_MAPS * count;
+
+    // Allocate one contiguous block in WASM memory
+    uint32_t wasm_base = wasm_runtime_module_malloc(module_inst, total_size, NULL);
+    if (!wasm_base) {
+        TraceLog(LOG_ERROR, "Failed to allocate %u bytes in WASM memory for materials", total_size);
+        return 0;
+    }
+
+    uint8_t *wasm_mem = (uint8_t *)wasm_runtime_addr_app_to_native(module_inst, wasm_base);
+    uint32_t offset = 0;
+
+    // Copy Material array (manually to handle pointer size differences)
+    Material *wasm_mats = (Material *)(wasm_mem + offset);
+    for (int i = 0; i < count; i++) {
+        // Copy non-pointer fields
+        wasm_mats[i].shader = materials[i].shader;
+        memcpy(wasm_mats[i].params, materials[i].params, sizeof(float) * 4);
+        // Pointer will be set below
+        wasm_mats[i].maps = NULL;
+    }
+    offset += sizeof(Material) * count;
+
+    // Deep copy maps for each material
+    for (int i = 0; i < count; i++) {
+        Material *src_mat = &materials[i];
+        Material *dst_mat = &wasm_mats[i];
+
+        // Copy maps array
+        if (src_mat->maps) {
+            MaterialMap *wasm_maps = (MaterialMap *)(wasm_mem + offset);
+            memcpy(wasm_maps, src_mat->maps, sizeof(MaterialMap) * MAX_MATERIAL_MAPS);
+            // Store as WASM pointer (32-bit offset)
+            uint32_t *maps_ptr = (uint32_t *)&dst_mat->maps;
+            *maps_ptr = wasm_base + offset;
+            offset += sizeof(MaterialMap) * MAX_MATERIAL_MAPS;
+        }
+    }
+
+    TraceLog(LOG_INFO, "Deep copied %d material(s) to WASM memory (%u bytes total)", count, total_size);
+    return wasm_base;
 }
 
 static void raycart_LoadMaterials(wasm_exec_env_t exec_env, uint32_t result_ptr, const char *fileName, uint32_t materialCount) {
     wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     int *materialCount_native = (int *)wasm_runtime_addr_app_to_native(module_inst, materialCount);
 
-    Material *result = LoadMaterials(fileName, materialCount_native);
+    // Load materials in host memory
+    Material *host_mats = LoadMaterials(fileName, materialCount_native);
 
-    if (result && *materialCount_native > 0) {
-        uint32_t wasm_size = sizeof(Material) * (*materialCount_native);
-        uint32_t wasm_ptr = wasm_runtime_module_malloc(module_inst, wasm_size, NULL);
+    if (host_mats && *materialCount_native > 0) {
+        // Deep copy to WASM memory
+        uint32_t wasm_ptr = DeepCopyMaterialsToWASM(module_inst, host_mats, *materialCount_native);
 
-        if (wasm_ptr) {
-            Material *wasm_array = (Material *)wasm_runtime_addr_app_to_native(module_inst, wasm_ptr);
-            memcpy(wasm_array, result, wasm_size);
+        // Note: LoadMaterials loads persistent GPU resources, so we don't unload here
+        // The materials still reference the GPU textures/shaders
 
-            uint32_t *result_wasm = (uint32_t *)wasm_runtime_addr_app_to_native(module_inst, result_ptr);
-            *result_wasm = wasm_ptr;
-        } else {
-            uint32_t *result_wasm = (uint32_t *)wasm_runtime_addr_app_to_native(module_inst, result_ptr);
-            *result_wasm = 0;
-        }
+        // Return WASM pointer
+        uint32_t *result_wasm = (uint32_t *)wasm_runtime_addr_app_to_native(module_inst, result_ptr);
+        *result_wasm = wasm_ptr;
     } else {
+        *materialCount_native = 0;
         uint32_t *result_wasm = (uint32_t *)wasm_runtime_addr_app_to_native(module_inst, result_ptr);
         *result_wasm = 0;
     }
@@ -2483,7 +2616,7 @@ static void raycart_LoadImagePalette(wasm_exec_env_t exec_env, uint32_t result_p
     }
 }
 
-#define raycart_native_symbols_count 564
+#define raycart_native_symbols_count 560
 static NativeSymbol raycart_native_symbols[raycart_native_symbols_count] = {
     {"InitWindow", raycart_InitWindow, "(ii$)"},
     {"CloseWindow", raycart_CloseWindow, "()"},
@@ -2971,11 +3104,7 @@ static NativeSymbol raycart_native_symbols[raycart_native_symbols_count] = {
     {"UnloadMaterial", raycart_UnloadMaterial, "(*)"},
     {"SetMaterialTexture", raycart_SetMaterialTexture, "(*i*)"},
     {"SetModelMeshMaterial", raycart_SetModelMeshMaterial, "(*ii)"},
-    {"UpdateModelAnimation", raycart_UpdateModelAnimation, "(**i)"},
-    {"UpdateModelAnimationBones", raycart_UpdateModelAnimationBones, "(**i)"},
-    {"UnloadModelAnimation", raycart_UnloadModelAnimation, "(*)"},
     {"UnloadModelAnimations", raycart_UnloadModelAnimations, "(*i)"},
-    {"IsModelAnimationValid", raycart_IsModelAnimationValid, "(**)i"},
     {"CheckCollisionSpheres", raycart_CheckCollisionSpheres, "(*f*f)i"},
     {"CheckCollisionBoxes", raycart_CheckCollisionBoxes, "(**)i"},
     {"CheckCollisionBoxSphere", raycart_CheckCollisionBoxSphere, "(**f)i"},

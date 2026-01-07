@@ -2302,20 +2302,8 @@ void SetMaterialTexture(Material * material, int mapType, Texture2D texture);
 RC_IMPORT("SetModelMeshMaterial")
 void SetModelMeshMaterial(Model * model, int meshId, int materialId);
 
-RC_IMPORT("UpdateModelAnimation")
-void UpdateModelAnimation(Model model, ModelAnimation anim, int frame);
-
-RC_IMPORT("UpdateModelAnimationBones")
-void UpdateModelAnimationBones(Model model, ModelAnimation anim, int frame);
-
-RC_IMPORT("UnloadModelAnimation")
-void UnloadModelAnimation(ModelAnimation anim);
-
 RC_IMPORT("UnloadModelAnimations")
 void UnloadModelAnimations(ModelAnimation * animations, int animCount);
-
-RC_IMPORT("IsModelAnimationValid")
-bool IsModelAnimationValid(Model model, ModelAnimation anim);
 
 RC_IMPORT("CheckCollisionSpheres")
 bool CheckCollisionSpheres(Vector3 center1, float radius1, Vector3 center2, float radius2);

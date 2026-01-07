@@ -114,7 +114,13 @@ const functionsToExclude = [
   'LoadModelAnimations',
   'LoadMaterials',
   'LoadImageColors',
-  'LoadImagePalette'
+  'LoadImagePalette',
+
+  // Functions that take ModelAnimation by value can't work on native due to pointer size mismatch
+  'UpdateModelAnimation',
+  'UpdateModelAnimationBones',
+  'UnloadModelAnimation',
+  'IsModelAnimationValid'
 ]
 
 // Variadic functions that will be implemented cart-side

@@ -127,8 +127,6 @@ static JSValue boundingbox_to_js(BoundingBox value);
 static BoundingBox boundingbox_from_js(JSValue obj);
 static JSValue material_to_js(Material value);
 static Material material_from_js(JSValue obj);
-static JSValue modelanimation_to_js(ModelAnimation value);
-static ModelAnimation modelanimation_from_js(JSValue obj);
 static JSValue raycollision_to_js(RayCollision value);
 static RayCollision raycollision_from_js(JSValue obj);
 static JSValue wave_to_js(Wave value);
@@ -1076,34 +1074,6 @@ static Material material_from_js(JSValue obj) {
   }
   JS_FreeValue(ctx, shader_val);
   // TODO: handle pointer field maps
-  return result;
-}
-
-static JSValue modelanimation_to_js(ModelAnimation value) {
-  JSValue obj = JS_NewObject(ctx);
-  JS_SetPropertyStr(ctx, obj, "boneCount", i32_to_js(value.boneCount));
-  JS_SetPropertyStr(ctx, obj, "frameCount", i32_to_js(value.frameCount));
-  // TODO: handle pointer field bones
-  // TODO: handle pointer field framePoses
-  return obj;
-}
-
-
-
-static ModelAnimation modelanimation_from_js(JSValue obj) {
-  ModelAnimation result = {0};
-  JSValue boneCount_val = JS_GetPropertyStr(ctx, obj, "boneCount");
-  if (!JS_IsUndefined(boneCount_val)) {
-    result.boneCount = i32_from_js(boneCount_val);
-  }
-  JS_FreeValue(ctx, boneCount_val);
-  JSValue frameCount_val = JS_GetPropertyStr(ctx, obj, "frameCount");
-  if (!JS_IsUndefined(frameCount_val)) {
-    result.frameCount = i32_from_js(frameCount_val);
-  }
-  JS_FreeValue(ctx, frameCount_val);
-  // TODO: handle pointer field bones
-  // TODO: handle pointer field framePoses
   return result;
 }
 
@@ -3058,25 +3028,6 @@ static JSValue js_UnloadMaterial(JSContext *ctx, JSValueConst this_val, int argc
   return JS_UNDEFINED;
 }
 
-static JSValue js_UpdateModelAnimation(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
-  UpdateModelAnimation(model_from_js(argv[0]), modelanimation_from_js(argv[1]), i32_from_js(argv[2]));
-  return JS_UNDEFINED;
-}
-
-static JSValue js_UpdateModelAnimationBones(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
-  UpdateModelAnimationBones(model_from_js(argv[0]), modelanimation_from_js(argv[1]), i32_from_js(argv[2]));
-  return JS_UNDEFINED;
-}
-
-static JSValue js_UnloadModelAnimation(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
-  UnloadModelAnimation(modelanimation_from_js(argv[0]));
-  return JS_UNDEFINED;
-}
-
-static JSValue js_IsModelAnimationValid(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
-  return bool_to_js(IsModelAnimationValid(model_from_js(argv[0]), modelanimation_from_js(argv[1])));
-}
-
 static JSValue js_CheckCollisionSpheres(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
   return bool_to_js(CheckCollisionSpheres(vector3_from_js(argv[0]), f32_from_js(argv[1]), vector3_from_js(argv[2]), f32_from_js(argv[3])));
 }
@@ -4081,10 +4032,6 @@ void expose_things_to_js() {
   JS_SetPropertyStr(ctx, global, "LoadMaterialDefault", JS_NewCFunction(ctx, js_LoadMaterialDefault, "LoadMaterialDefault", 0));
   JS_SetPropertyStr(ctx, global, "IsMaterialValid", JS_NewCFunction(ctx, js_IsMaterialValid, "IsMaterialValid", 1));
   JS_SetPropertyStr(ctx, global, "UnloadMaterial", JS_NewCFunction(ctx, js_UnloadMaterial, "UnloadMaterial", 1));
-  JS_SetPropertyStr(ctx, global, "UpdateModelAnimation", JS_NewCFunction(ctx, js_UpdateModelAnimation, "UpdateModelAnimation", 3));
-  JS_SetPropertyStr(ctx, global, "UpdateModelAnimationBones", JS_NewCFunction(ctx, js_UpdateModelAnimationBones, "UpdateModelAnimationBones", 3));
-  JS_SetPropertyStr(ctx, global, "UnloadModelAnimation", JS_NewCFunction(ctx, js_UnloadModelAnimation, "UnloadModelAnimation", 1));
-  JS_SetPropertyStr(ctx, global, "IsModelAnimationValid", JS_NewCFunction(ctx, js_IsModelAnimationValid, "IsModelAnimationValid", 2));
   JS_SetPropertyStr(ctx, global, "CheckCollisionSpheres", JS_NewCFunction(ctx, js_CheckCollisionSpheres, "CheckCollisionSpheres", 4));
   JS_SetPropertyStr(ctx, global, "CheckCollisionBoxes", JS_NewCFunction(ctx, js_CheckCollisionBoxes, "CheckCollisionBoxes", 2));
   JS_SetPropertyStr(ctx, global, "CheckCollisionBoxSphere", JS_NewCFunction(ctx, js_CheckCollisionBoxSphere, "CheckCollisionBoxSphere", 3));

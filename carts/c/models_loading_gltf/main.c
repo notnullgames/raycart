@@ -1,4 +1,4 @@
-// TODO: this needs some host-support
+// TODO: this needs some host-support for animation
 
 /*******************************************************************************************
 *
@@ -31,38 +31,26 @@ Model model;
 int animsCount = 0;
 unsigned int animIndex = 0;
 unsigned int animCurrentFrame = 0;
-ModelAnimation *modelAnimations;
 
 void CartInit() {
-    InitWindow(800, 450, "raylib [core] example - basic window");
-    
+    InitWindow(800, 450, "raylib [models] example - loading gltf");
+    TraceLog(LOG_INFO, "Window initialized");
+
     camera.position = (Vector3){ 6.0f, 6.0f, 6.0f };    // Camera position
     camera.target = (Vector3){ 0.0f, 2.0f, 0.0f };      // Camera looking at point
     camera.up = (Vector3){ 0.0f, 1.0f, 0.0f };          // Camera up vector (rotation towards target)
     camera.fovy = 45.0f;                                // Camera field-of-view Y
     camera.projection = CAMERA_PERSPECTIVE;             // Camera projection type
 
+    TraceLog(LOG_INFO, "Loading model...");
     model = LoadModel("robot.glb");
-
-    // modelAnimations = LoadModelAnimations("robot.glb", &animsCount);
+    TraceLog(LOG_INFO, "Model loaded successfully");
 }
 
 void CartUpdate () {
     // Update
     //----------------------------------------------------------------------------------
     UpdateCamera(&camera, CAMERA_ORBITAL);
-
-    if (modelAnimations != NULL && animsCount > 0) {
-        // Select current animation
-        if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) animIndex = (animIndex + 1)%animsCount;
-        else if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) animIndex = (animIndex + animsCount - 1)%animsCount;
-
-        // Update model animation
-        ModelAnimation anim = modelAnimations[animIndex];
-        animCurrentFrame = (animCurrentFrame + 1)%anim.frameCount;
-        // UpdateModelAnimation(model, anim, animCurrentFrame);
-    }
-    //----------------------------------------------------------------------------------
 
     // Draw
     //----------------------------------------------------------------------------------
@@ -73,14 +61,8 @@ void CartUpdate () {
         DrawGrid(10, 1.0f);
     EndMode3D();
 
-    if (modelAnimations != NULL && animsCount > 0) {
-        ModelAnimation anim = modelAnimations[animIndex];
-        DrawText("Use the LEFT/RIGHT mouse buttons to switch animation", 10, 10, 20, GRAY);
-        DrawText(TextFormat("Animation: %s", anim.name), 10, GetScreenHeight() - 20, 10, DARKGRAY);
-    } else {
-        DrawText("Model animations not supported yet", 10, 10, 20, RED);
-        DrawText("(Complex nested pointer structures need deep copying)", 10, 30, 10, GRAY);
-    }
+    DrawText("3D Model Loading Demo", 10, 10, 20, GRAY);
+    DrawText("(Animations not supported yet)", 10, 30, 10, DARKGRAY);
 }
 
 void CartClose() {

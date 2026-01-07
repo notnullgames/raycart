@@ -357,7 +357,6 @@ _IsKeyPressedRepeat
 _IsKeyReleased
 _IsKeyUp
 _IsMaterialValid
-_IsModelAnimationValid
 _IsModelValid
 _IsMouseButtonDown
 _IsMouseButtonPressed
@@ -535,7 +534,6 @@ _UnloadImagePalette
 _UnloadMaterial
 _UnloadMesh
 _UnloadModel
-_UnloadModelAnimation
 _UnloadModelAnimations
 _UnloadMusicStream
 _UnloadRandomSequence
@@ -552,8 +550,6 @@ _UpdateAudioStream
 _UpdateCamera
 _UpdateCameraPro
 _UpdateMeshBuffer
-_UpdateModelAnimation
-_UpdateModelAnimationBones
 _UpdateMusicStream
 _UpdateSound
 _UpdateTexture

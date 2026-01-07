@@ -92,6 +92,20 @@ function getHelperName(type) {
   return name.charAt(0).toLowerCase() + name.slice(1)
 }
 
+// Check if a struct contains pointer fields (making it unsafe to copy by value)
+function structHasPointers(structName) {
+  const resolved = resolveAlias(structName)
+  const struct = api.structs.find((s) => s.name === resolved)
+  if (!struct) return false
+
+  for (const field of struct.fields) {
+    if (isPointer(field.type) && !field.type.match(/char\s*\*/)) {
+      return true  // Has pointer field (excluding strings)
+    }
+  }
+  return false
+}
+
 // Collect all struct types used in the API
 function getUsedStructs() {
   const used = new Set()
@@ -151,7 +165,13 @@ const functionsToExclude = [
   'LoadModelAnimations',
   'LoadMaterials',
   'LoadImageColors',
-  'LoadImagePalette'
+  'LoadImagePalette',
+
+  // Functions that take ModelAnimation by value can't work due to pointer size mismatch
+  'UpdateModelAnimation',
+  'UpdateModelAnimationBones',
+  'UnloadModelAnimation',
+  'IsModelAnimationValid'
 ]
 
 // Generate function binding
@@ -184,8 +204,15 @@ function generateFunction(func) {
       hostParams.push(hostName)
       cleanupLines.push(`            Module._MemFree(${hostName});`)
     } else if (isStruct(param.type) && isPointer(param.type)) {
-      // Struct pointer - just pass the pointer
-      hostParams.push(param.name)
+      // Struct pointer - copy from cart to host, call function, copy back
+      const structName = getTypeName(param.type)
+      const helperName = `cart${structName}`
+      const size = getStructSize(structName)
+      lines.push(`            const ${hostName} = ${helperName}(${param.name});`)
+      hostParams.push(hostName)
+      // After the function call, copy back to cart and cleanup
+      cleanupLines.push(`            copyHostToCart(${hostName}, ${param.name}, ${size});`)
+      cleanupLines.push(`            Module._MemFree(${hostName});`)
     } else {
       // Primitive - pass directly
       hostParams.push(param.name)

@@ -222,7 +222,10 @@ EM_ASYNC_JS(bool, CartInit, (char *wasmBuffer, int bytesRead), {
         },
 
         SetWindowIcons(images, count) {
-            Module._SetWindowIcons(images, count);
+            const images_h = cartImage(images);
+            Module._SetWindowIcons(images_h, count);
+            copyHostToCart(images_h, images, 20);
+            Module._MemFree(images_h);
         },
 
         SetWindowTitle(title) {
@@ -1004,7 +1007,10 @@ EM_ASYNC_JS(bool, CartInit, (char *wasmBuffer, int bytesRead), {
         },
 
         SetAutomationEventList(list) {
-            Module._SetAutomationEventList(list);
+            const list_h = cartAutomationEventList(list);
+            Module._SetAutomationEventList(list_h);
+            copyHostToCart(list_h, list, 12);
+            Module._MemFree(list_h);
         },
 
         SetAutomationEventBaseFrame(frame) {
@@ -1268,13 +1274,19 @@ EM_ASYNC_JS(bool, CartInit, (char *wasmBuffer, int bytesRead), {
         },
 
         UpdateCamera(camera, mode) {
-            Module._UpdateCamera(camera, mode);
+            const camera_h = cartCamera3D(camera);
+            Module._UpdateCamera(camera_h, mode);
+            copyHostToCart(camera_h, camera, 44);
+            Module._MemFree(camera_h);
         },
 
         UpdateCameraPro(camera, movement, rotation, zoom) {
+            const camera_h = cartCamera3D(camera);
             const movement_h = cartVector3(movement);
             const rotation_h = cartVector3(rotation);
-            Module._UpdateCameraPro(camera, movement_h, rotation_h, zoom);
+            Module._UpdateCameraPro(camera_h, movement_h, rotation_h, zoom);
+            copyHostToCart(camera_h, camera, 44);
+            Module._MemFree(camera_h);
             Module._MemFree(movement_h);
             Module._MemFree(rotation_h);
         },
@@ -1342,8 +1354,11 @@ EM_ASYNC_JS(bool, CartInit, (char *wasmBuffer, int bytesRead), {
         },
 
         DrawLineStrip(points, pointCount, color) {
+            const points_h = cartVector2(points);
             const color_h = cartColor(color);
-            Module._DrawLineStrip(points, pointCount, color_h);
+            Module._DrawLineStrip(points_h, pointCount, color_h);
+            copyHostToCart(points_h, points, 8);
+            Module._MemFree(points_h);
             Module._MemFree(color_h);
         },
 
@@ -1564,14 +1579,20 @@ EM_ASYNC_JS(bool, CartInit, (char *wasmBuffer, int bytesRead), {
         },
 
         DrawTriangleFan(points, pointCount, color) {
+            const points_h = cartVector2(points);
             const color_h = cartColor(color);
-            Module._DrawTriangleFan(points, pointCount, color_h);
+            Module._DrawTriangleFan(points_h, pointCount, color_h);
+            copyHostToCart(points_h, points, 8);
+            Module._MemFree(points_h);
             Module._MemFree(color_h);
         },
 
         DrawTriangleStrip(points, pointCount, color) {
+            const points_h = cartVector2(points);
             const color_h = cartColor(color);
-            Module._DrawTriangleStrip(points, pointCount, color_h);
+            Module._DrawTriangleStrip(points_h, pointCount, color_h);
+            copyHostToCart(points_h, points, 8);
+            Module._MemFree(points_h);
             Module._MemFree(color_h);
         },
 
@@ -1600,32 +1621,47 @@ EM_ASYNC_JS(bool, CartInit, (char *wasmBuffer, int bytesRead), {
         },
 
         DrawSplineLinear(points, pointCount, thick, color) {
+            const points_h = cartVector2(points);
             const color_h = cartColor(color);
-            Module._DrawSplineLinear(points, pointCount, thick, color_h);
+            Module._DrawSplineLinear(points_h, pointCount, thick, color_h);
+            copyHostToCart(points_h, points, 8);
+            Module._MemFree(points_h);
             Module._MemFree(color_h);
         },
 
         DrawSplineBasis(points, pointCount, thick, color) {
+            const points_h = cartVector2(points);
             const color_h = cartColor(color);
-            Module._DrawSplineBasis(points, pointCount, thick, color_h);
+            Module._DrawSplineBasis(points_h, pointCount, thick, color_h);
+            copyHostToCart(points_h, points, 8);
+            Module._MemFree(points_h);
             Module._MemFree(color_h);
         },
 
         DrawSplineCatmullRom(points, pointCount, thick, color) {
+            const points_h = cartVector2(points);
             const color_h = cartColor(color);
-            Module._DrawSplineCatmullRom(points, pointCount, thick, color_h);
+            Module._DrawSplineCatmullRom(points_h, pointCount, thick, color_h);
+            copyHostToCart(points_h, points, 8);
+            Module._MemFree(points_h);
             Module._MemFree(color_h);
         },
 
         DrawSplineBezierQuadratic(points, pointCount, thick, color) {
+            const points_h = cartVector2(points);
             const color_h = cartColor(color);
-            Module._DrawSplineBezierQuadratic(points, pointCount, thick, color_h);
+            Module._DrawSplineBezierQuadratic(points_h, pointCount, thick, color_h);
+            copyHostToCart(points_h, points, 8);
+            Module._MemFree(points_h);
             Module._MemFree(color_h);
         },
 
         DrawSplineBezierCubic(points, pointCount, thick, color) {
+            const points_h = cartVector2(points);
             const color_h = cartColor(color);
-            Module._DrawSplineBezierCubic(points, pointCount, thick, color_h);
+            Module._DrawSplineBezierCubic(points_h, pointCount, thick, color_h);
+            copyHostToCart(points_h, points, 8);
+            Module._MemFree(points_h);
             Module._MemFree(color_h);
         },
 
@@ -1844,8 +1880,11 @@ EM_ASYNC_JS(bool, CartInit, (char *wasmBuffer, int bytesRead), {
 
         CheckCollisionPointPoly(point, points, pointCount) {
             const point_h = cartVector2(point);
-            const result = Module._CheckCollisionPointPoly(point_h, points, pointCount);
+            const points_h = cartVector2(points);
+            const result = Module._CheckCollisionPointPoly(point_h, points_h, pointCount);
             Module._MemFree(point_h);
+            copyHostToCart(points_h, points, 8);
+            Module._MemFree(points_h);
             return result;
         },
 
@@ -1854,11 +1893,14 @@ EM_ASYNC_JS(bool, CartInit, (char *wasmBuffer, int bytesRead), {
             const endPos1_h = cartVector2(endPos1);
             const startPos2_h = cartVector2(startPos2);
             const endPos2_h = cartVector2(endPos2);
-            const result = Module._CheckCollisionLines(startPos1_h, endPos1_h, startPos2_h, endPos2_h, collisionPoint);
+            const collisionPoint_h = cartVector2(collisionPoint);
+            const result = Module._CheckCollisionLines(startPos1_h, endPos1_h, startPos2_h, endPos2_h, collisionPoint_h);
             Module._MemFree(startPos1_h);
             Module._MemFree(endPos1_h);
             Module._MemFree(startPos2_h);
             Module._MemFree(endPos2_h);
+            copyHostToCart(collisionPoint_h, collisionPoint, 8);
+            Module._MemFree(collisionPoint_h);
             return result;
         },
 
@@ -2115,127 +2157,208 @@ EM_ASYNC_JS(bool, CartInit, (char *wasmBuffer, int bytesRead), {
         },
 
         ImageFormat(image, newFormat) {
-            Module._ImageFormat(image, newFormat);
+            const image_h = cartImage(image);
+            Module._ImageFormat(image_h, newFormat);
+            copyHostToCart(image_h, image, 20);
+            Module._MemFree(image_h);
         },
 
         ImageToPOT(image, fill) {
+            const image_h = cartImage(image);
             const fill_h = cartColor(fill);
-            Module._ImageToPOT(image, fill_h);
+            Module._ImageToPOT(image_h, fill_h);
+            copyHostToCart(image_h, image, 20);
+            Module._MemFree(image_h);
             Module._MemFree(fill_h);
         },
 
         ImageCrop(image, crop) {
+            const image_h = cartImage(image);
             const crop_h = cartRectangle(crop);
-            Module._ImageCrop(image, crop_h);
+            Module._ImageCrop(image_h, crop_h);
+            copyHostToCart(image_h, image, 20);
+            Module._MemFree(image_h);
             Module._MemFree(crop_h);
         },
 
         ImageAlphaCrop(image, threshold) {
-            Module._ImageAlphaCrop(image, threshold);
+            const image_h = cartImage(image);
+            Module._ImageAlphaCrop(image_h, threshold);
+            copyHostToCart(image_h, image, 20);
+            Module._MemFree(image_h);
         },
 
         ImageAlphaClear(image, color, threshold) {
+            const image_h = cartImage(image);
             const color_h = cartColor(color);
-            Module._ImageAlphaClear(image, color_h, threshold);
+            Module._ImageAlphaClear(image_h, color_h, threshold);
+            copyHostToCart(image_h, image, 20);
+            Module._MemFree(image_h);
             Module._MemFree(color_h);
         },
 
         ImageAlphaMask(image, alphaMask) {
+            const image_h = cartImage(image);
             const alphaMask_h = cartImage(alphaMask);
-            Module._ImageAlphaMask(image, alphaMask_h);
+            Module._ImageAlphaMask(image_h, alphaMask_h);
+            copyHostToCart(image_h, image, 20);
+            Module._MemFree(image_h);
             Module._MemFree(alphaMask_h);
         },
 
         ImageAlphaPremultiply(image) {
-            Module._ImageAlphaPremultiply(image);
+            const image_h = cartImage(image);
+            Module._ImageAlphaPremultiply(image_h);
+            copyHostToCart(image_h, image, 20);
+            Module._MemFree(image_h);
         },
 
         ImageBlurGaussian(image, blurSize) {
-            Module._ImageBlurGaussian(image, blurSize);
+            const image_h = cartImage(image);
+            Module._ImageBlurGaussian(image_h, blurSize);
+            copyHostToCart(image_h, image, 20);
+            Module._MemFree(image_h);
         },
 
         ImageKernelConvolution(image, kernel, kernelSize) {
-            Module._ImageKernelConvolution(image, kernel, kernelSize);
+            const image_h = cartImage(image);
+            Module._ImageKernelConvolution(image_h, kernel, kernelSize);
+            copyHostToCart(image_h, image, 20);
+            Module._MemFree(image_h);
         },
 
         ImageResize(image, newWidth, newHeight) {
-            Module._ImageResize(image, newWidth, newHeight);
+            const image_h = cartImage(image);
+            Module._ImageResize(image_h, newWidth, newHeight);
+            copyHostToCart(image_h, image, 20);
+            Module._MemFree(image_h);
         },
 
         ImageResizeNN(image, newWidth, newHeight) {
-            Module._ImageResizeNN(image, newWidth, newHeight);
+            const image_h = cartImage(image);
+            Module._ImageResizeNN(image_h, newWidth, newHeight);
+            copyHostToCart(image_h, image, 20);
+            Module._MemFree(image_h);
         },
 
         ImageResizeCanvas(image, newWidth, newHeight, offsetX, offsetY, fill) {
+            const image_h = cartImage(image);
             const fill_h = cartColor(fill);
-            Module._ImageResizeCanvas(image, newWidth, newHeight, offsetX, offsetY, fill_h);
+            Module._ImageResizeCanvas(image_h, newWidth, newHeight, offsetX, offsetY, fill_h);
+            copyHostToCart(image_h, image, 20);
+            Module._MemFree(image_h);
             Module._MemFree(fill_h);
         },
 
         ImageMipmaps(image) {
-            Module._ImageMipmaps(image);
+            const image_h = cartImage(image);
+            Module._ImageMipmaps(image_h);
+            copyHostToCart(image_h, image, 20);
+            Module._MemFree(image_h);
         },
 
         ImageDither(image, rBpp, gBpp, bBpp, aBpp) {
-            Module._ImageDither(image, rBpp, gBpp, bBpp, aBpp);
+            const image_h = cartImage(image);
+            Module._ImageDither(image_h, rBpp, gBpp, bBpp, aBpp);
+            copyHostToCart(image_h, image, 20);
+            Module._MemFree(image_h);
         },
 
         ImageFlipVertical(image) {
-            Module._ImageFlipVertical(image);
+            const image_h = cartImage(image);
+            Module._ImageFlipVertical(image_h);
+            copyHostToCart(image_h, image, 20);
+            Module._MemFree(image_h);
         },
 
         ImageFlipHorizontal(image) {
-            Module._ImageFlipHorizontal(image);
+            const image_h = cartImage(image);
+            Module._ImageFlipHorizontal(image_h);
+            copyHostToCart(image_h, image, 20);
+            Module._MemFree(image_h);
         },
 
         ImageRotate(image, degrees) {
-            Module._ImageRotate(image, degrees);
+            const image_h = cartImage(image);
+            Module._ImageRotate(image_h, degrees);
+            copyHostToCart(image_h, image, 20);
+            Module._MemFree(image_h);
         },
 
         ImageRotateCW(image) {
-            Module._ImageRotateCW(image);
+            const image_h = cartImage(image);
+            Module._ImageRotateCW(image_h);
+            copyHostToCart(image_h, image, 20);
+            Module._MemFree(image_h);
         },
 
         ImageRotateCCW(image) {
-            Module._ImageRotateCCW(image);
+            const image_h = cartImage(image);
+            Module._ImageRotateCCW(image_h);
+            copyHostToCart(image_h, image, 20);
+            Module._MemFree(image_h);
         },
 
         ImageColorTint(image, color) {
+            const image_h = cartImage(image);
             const color_h = cartColor(color);
-            Module._ImageColorTint(image, color_h);
+            Module._ImageColorTint(image_h, color_h);
+            copyHostToCart(image_h, image, 20);
+            Module._MemFree(image_h);
             Module._MemFree(color_h);
         },
 
         ImageColorInvert(image) {
-            Module._ImageColorInvert(image);
+            const image_h = cartImage(image);
+            Module._ImageColorInvert(image_h);
+            copyHostToCart(image_h, image, 20);
+            Module._MemFree(image_h);
         },
 
         ImageColorGrayscale(image) {
-            Module._ImageColorGrayscale(image);
+            const image_h = cartImage(image);
+            Module._ImageColorGrayscale(image_h);
+            copyHostToCart(image_h, image, 20);
+            Module._MemFree(image_h);
         },
 
         ImageColorContrast(image, contrast) {
-            Module._ImageColorContrast(image, contrast);
+            const image_h = cartImage(image);
+            Module._ImageColorContrast(image_h, contrast);
+            copyHostToCart(image_h, image, 20);
+            Module._MemFree(image_h);
         },
 
         ImageColorBrightness(image, brightness) {
-            Module._ImageColorBrightness(image, brightness);
+            const image_h = cartImage(image);
+            Module._ImageColorBrightness(image_h, brightness);
+            copyHostToCart(image_h, image, 20);
+            Module._MemFree(image_h);
         },
 
         ImageColorReplace(image, color, replace) {
+            const image_h = cartImage(image);
             const color_h = cartColor(color);
             const replace_h = cartColor(replace);
-            Module._ImageColorReplace(image, color_h, replace_h);
+            Module._ImageColorReplace(image_h, color_h, replace_h);
+            copyHostToCart(image_h, image, 20);
+            Module._MemFree(image_h);
             Module._MemFree(color_h);
             Module._MemFree(replace_h);
         },
 
         UnloadImageColors(colors) {
-            Module._UnloadImageColors(colors);
+            const colors_h = cartColor(colors);
+            Module._UnloadImageColors(colors_h);
+            copyHostToCart(colors_h, colors, 4);
+            Module._MemFree(colors_h);
         },
 
         UnloadImagePalette(colors) {
-            Module._UnloadImagePalette(colors);
+            const colors_h = cartColor(colors);
+            Module._UnloadImagePalette(colors_h);
+            copyHostToCart(colors_h, colors, 4);
+            Module._MemFree(colors_h);
         },
 
         GetImageAlphaBorder(resultPtr, image, threshold) {
@@ -2257,117 +2380,162 @@ EM_ASYNC_JS(bool, CartInit, (char *wasmBuffer, int bytesRead), {
         },
 
         ImageClearBackground(dst, color) {
+            const dst_h = cartImage(dst);
             const color_h = cartColor(color);
-            Module._ImageClearBackground(dst, color_h);
+            Module._ImageClearBackground(dst_h, color_h);
+            copyHostToCart(dst_h, dst, 20);
+            Module._MemFree(dst_h);
             Module._MemFree(color_h);
         },
 
         ImageDrawPixel(dst, posX, posY, color) {
+            const dst_h = cartImage(dst);
             const color_h = cartColor(color);
-            Module._ImageDrawPixel(dst, posX, posY, color_h);
+            Module._ImageDrawPixel(dst_h, posX, posY, color_h);
+            copyHostToCart(dst_h, dst, 20);
+            Module._MemFree(dst_h);
             Module._MemFree(color_h);
         },
 
         ImageDrawPixelV(dst, position, color) {
+            const dst_h = cartImage(dst);
             const position_h = cartVector2(position);
             const color_h = cartColor(color);
-            Module._ImageDrawPixelV(dst, position_h, color_h);
+            Module._ImageDrawPixelV(dst_h, position_h, color_h);
+            copyHostToCart(dst_h, dst, 20);
+            Module._MemFree(dst_h);
             Module._MemFree(position_h);
             Module._MemFree(color_h);
         },
 
         ImageDrawLine(dst, startPosX, startPosY, endPosX, endPosY, color) {
+            const dst_h = cartImage(dst);
             const color_h = cartColor(color);
-            Module._ImageDrawLine(dst, startPosX, startPosY, endPosX, endPosY, color_h);
+            Module._ImageDrawLine(dst_h, startPosX, startPosY, endPosX, endPosY, color_h);
+            copyHostToCart(dst_h, dst, 20);
+            Module._MemFree(dst_h);
             Module._MemFree(color_h);
         },
 
         ImageDrawLineV(dst, start, end, color) {
+            const dst_h = cartImage(dst);
             const start_h = cartVector2(start);
             const end_h = cartVector2(end);
             const color_h = cartColor(color);
-            Module._ImageDrawLineV(dst, start_h, end_h, color_h);
+            Module._ImageDrawLineV(dst_h, start_h, end_h, color_h);
+            copyHostToCart(dst_h, dst, 20);
+            Module._MemFree(dst_h);
             Module._MemFree(start_h);
             Module._MemFree(end_h);
             Module._MemFree(color_h);
         },
 
         ImageDrawLineEx(dst, start, end, thick, color) {
+            const dst_h = cartImage(dst);
             const start_h = cartVector2(start);
             const end_h = cartVector2(end);
             const color_h = cartColor(color);
-            Module._ImageDrawLineEx(dst, start_h, end_h, thick, color_h);
+            Module._ImageDrawLineEx(dst_h, start_h, end_h, thick, color_h);
+            copyHostToCart(dst_h, dst, 20);
+            Module._MemFree(dst_h);
             Module._MemFree(start_h);
             Module._MemFree(end_h);
             Module._MemFree(color_h);
         },
 
         ImageDrawCircle(dst, centerX, centerY, radius, color) {
+            const dst_h = cartImage(dst);
             const color_h = cartColor(color);
-            Module._ImageDrawCircle(dst, centerX, centerY, radius, color_h);
+            Module._ImageDrawCircle(dst_h, centerX, centerY, radius, color_h);
+            copyHostToCart(dst_h, dst, 20);
+            Module._MemFree(dst_h);
             Module._MemFree(color_h);
         },
 
         ImageDrawCircleV(dst, center, radius, color) {
+            const dst_h = cartImage(dst);
             const center_h = cartVector2(center);
             const color_h = cartColor(color);
-            Module._ImageDrawCircleV(dst, center_h, radius, color_h);
+            Module._ImageDrawCircleV(dst_h, center_h, radius, color_h);
+            copyHostToCart(dst_h, dst, 20);
+            Module._MemFree(dst_h);
             Module._MemFree(center_h);
             Module._MemFree(color_h);
         },
 
         ImageDrawCircleLines(dst, centerX, centerY, radius, color) {
+            const dst_h = cartImage(dst);
             const color_h = cartColor(color);
-            Module._ImageDrawCircleLines(dst, centerX, centerY, radius, color_h);
+            Module._ImageDrawCircleLines(dst_h, centerX, centerY, radius, color_h);
+            copyHostToCart(dst_h, dst, 20);
+            Module._MemFree(dst_h);
             Module._MemFree(color_h);
         },
 
         ImageDrawCircleLinesV(dst, center, radius, color) {
+            const dst_h = cartImage(dst);
             const center_h = cartVector2(center);
             const color_h = cartColor(color);
-            Module._ImageDrawCircleLinesV(dst, center_h, radius, color_h);
+            Module._ImageDrawCircleLinesV(dst_h, center_h, radius, color_h);
+            copyHostToCart(dst_h, dst, 20);
+            Module._MemFree(dst_h);
             Module._MemFree(center_h);
             Module._MemFree(color_h);
         },
 
         ImageDrawRectangle(dst, posX, posY, width, height, color) {
+            const dst_h = cartImage(dst);
             const color_h = cartColor(color);
-            Module._ImageDrawRectangle(dst, posX, posY, width, height, color_h);
+            Module._ImageDrawRectangle(dst_h, posX, posY, width, height, color_h);
+            copyHostToCart(dst_h, dst, 20);
+            Module._MemFree(dst_h);
             Module._MemFree(color_h);
         },
 
         ImageDrawRectangleV(dst, position, size, color) {
+            const dst_h = cartImage(dst);
             const position_h = cartVector2(position);
             const size_h = cartVector2(size);
             const color_h = cartColor(color);
-            Module._ImageDrawRectangleV(dst, position_h, size_h, color_h);
+            Module._ImageDrawRectangleV(dst_h, position_h, size_h, color_h);
+            copyHostToCart(dst_h, dst, 20);
+            Module._MemFree(dst_h);
             Module._MemFree(position_h);
             Module._MemFree(size_h);
             Module._MemFree(color_h);
         },
 
         ImageDrawRectangleRec(dst, rec, color) {
+            const dst_h = cartImage(dst);
             const rec_h = cartRectangle(rec);
             const color_h = cartColor(color);
-            Module._ImageDrawRectangleRec(dst, rec_h, color_h);
+            Module._ImageDrawRectangleRec(dst_h, rec_h, color_h);
+            copyHostToCart(dst_h, dst, 20);
+            Module._MemFree(dst_h);
             Module._MemFree(rec_h);
             Module._MemFree(color_h);
         },
 
         ImageDrawRectangleLines(dst, rec, thick, color) {
+            const dst_h = cartImage(dst);
             const rec_h = cartRectangle(rec);
             const color_h = cartColor(color);
-            Module._ImageDrawRectangleLines(dst, rec_h, thick, color_h);
+            Module._ImageDrawRectangleLines(dst_h, rec_h, thick, color_h);
+            copyHostToCart(dst_h, dst, 20);
+            Module._MemFree(dst_h);
             Module._MemFree(rec_h);
             Module._MemFree(color_h);
         },
 
         ImageDrawTriangle(dst, v1, v2, v3, color) {
+            const dst_h = cartImage(dst);
             const v1_h = cartVector2(v1);
             const v2_h = cartVector2(v2);
             const v3_h = cartVector2(v3);
             const color_h = cartColor(color);
-            Module._ImageDrawTriangle(dst, v1_h, v2_h, v3_h, color_h);
+            Module._ImageDrawTriangle(dst_h, v1_h, v2_h, v3_h, color_h);
+            copyHostToCart(dst_h, dst, 20);
+            Module._MemFree(dst_h);
             Module._MemFree(v1_h);
             Module._MemFree(v2_h);
             Module._MemFree(v3_h);
@@ -2375,13 +2543,16 @@ EM_ASYNC_JS(bool, CartInit, (char *wasmBuffer, int bytesRead), {
         },
 
         ImageDrawTriangleEx(dst, v1, v2, v3, c1, c2, c3) {
+            const dst_h = cartImage(dst);
             const v1_h = cartVector2(v1);
             const v2_h = cartVector2(v2);
             const v3_h = cartVector2(v3);
             const c1_h = cartColor(c1);
             const c2_h = cartColor(c2);
             const c3_h = cartColor(c3);
-            Module._ImageDrawTriangleEx(dst, v1_h, v2_h, v3_h, c1_h, c2_h, c3_h);
+            Module._ImageDrawTriangleEx(dst_h, v1_h, v2_h, v3_h, c1_h, c2_h, c3_h);
+            copyHostToCart(dst_h, dst, 20);
+            Module._MemFree(dst_h);
             Module._MemFree(v1_h);
             Module._MemFree(v2_h);
             Module._MemFree(v3_h);
@@ -2391,11 +2562,14 @@ EM_ASYNC_JS(bool, CartInit, (char *wasmBuffer, int bytesRead), {
         },
 
         ImageDrawTriangleLines(dst, v1, v2, v3, color) {
+            const dst_h = cartImage(dst);
             const v1_h = cartVector2(v1);
             const v2_h = cartVector2(v2);
             const v3_h = cartVector2(v3);
             const color_h = cartColor(color);
-            Module._ImageDrawTriangleLines(dst, v1_h, v2_h, v3_h, color_h);
+            Module._ImageDrawTriangleLines(dst_h, v1_h, v2_h, v3_h, color_h);
+            copyHostToCart(dst_h, dst, 20);
+            Module._MemFree(dst_h);
             Module._MemFree(v1_h);
             Module._MemFree(v2_h);
             Module._MemFree(v3_h);
@@ -2403,23 +2577,38 @@ EM_ASYNC_JS(bool, CartInit, (char *wasmBuffer, int bytesRead), {
         },
 
         ImageDrawTriangleFan(dst, points, pointCount, color) {
+            const dst_h = cartImage(dst);
+            const points_h = cartVector2(points);
             const color_h = cartColor(color);
-            Module._ImageDrawTriangleFan(dst, points, pointCount, color_h);
+            Module._ImageDrawTriangleFan(dst_h, points_h, pointCount, color_h);
+            copyHostToCart(dst_h, dst, 20);
+            Module._MemFree(dst_h);
+            copyHostToCart(points_h, points, 8);
+            Module._MemFree(points_h);
             Module._MemFree(color_h);
         },
 
         ImageDrawTriangleStrip(dst, points, pointCount, color) {
+            const dst_h = cartImage(dst);
+            const points_h = cartVector2(points);
             const color_h = cartColor(color);
-            Module._ImageDrawTriangleStrip(dst, points, pointCount, color_h);
+            Module._ImageDrawTriangleStrip(dst_h, points_h, pointCount, color_h);
+            copyHostToCart(dst_h, dst, 20);
+            Module._MemFree(dst_h);
+            copyHostToCart(points_h, points, 8);
+            Module._MemFree(points_h);
             Module._MemFree(color_h);
         },
 
         ImageDraw(dst, src, srcRec, dstRec, tint) {
+            const dst_h = cartImage(dst);
             const src_h = cartImage(src);
             const srcRec_h = cartRectangle(srcRec);
             const dstRec_h = cartRectangle(dstRec);
             const tint_h = cartColor(tint);
-            Module._ImageDraw(dst, src_h, srcRec_h, dstRec_h, tint_h);
+            Module._ImageDraw(dst_h, src_h, srcRec_h, dstRec_h, tint_h);
+            copyHostToCart(dst_h, dst, 20);
+            Module._MemFree(dst_h);
             Module._MemFree(src_h);
             Module._MemFree(srcRec_h);
             Module._MemFree(dstRec_h);
@@ -2427,19 +2616,25 @@ EM_ASYNC_JS(bool, CartInit, (char *wasmBuffer, int bytesRead), {
         },
 
         ImageDrawText(dst, text, posX, posY, fontSize, color) {
+            const dst_h = cartImage(dst);
             const text_h = cartString(text);
             const color_h = cartColor(color);
-            Module._ImageDrawText(dst, text_h, posX, posY, fontSize, color_h);
+            Module._ImageDrawText(dst_h, text_h, posX, posY, fontSize, color_h);
+            copyHostToCart(dst_h, dst, 20);
+            Module._MemFree(dst_h);
             Module._MemFree(text_h);
             Module._MemFree(color_h);
         },
 
         ImageDrawTextEx(dst, font, text, position, fontSize, spacing, tint) {
+            const dst_h = cartImage(dst);
             const font_h = cartFont(font);
             const text_h = cartString(text);
             const position_h = cartVector2(position);
             const tint_h = cartColor(tint);
-            Module._ImageDrawTextEx(dst, font_h, text_h, position_h, fontSize, spacing, tint_h);
+            Module._ImageDrawTextEx(dst_h, font_h, text_h, position_h, fontSize, spacing, tint_h);
+            copyHostToCart(dst_h, dst, 20);
+            Module._MemFree(dst_h);
             Module._MemFree(font_h);
             Module._MemFree(text_h);
             Module._MemFree(position_h);
@@ -2521,7 +2716,10 @@ EM_ASYNC_JS(bool, CartInit, (char *wasmBuffer, int bytesRead), {
         },
 
         GenTextureMipmaps(texture) {
-            Module._GenTextureMipmaps(texture);
+            const texture_h = cartTexture(texture);
+            Module._GenTextureMipmaps(texture_h);
+            copyHostToCart(texture_h, texture, 20);
+            Module._MemFree(texture_h);
         },
 
         SetTextureFilter(texture, filter) {
@@ -2812,14 +3010,23 @@ EM_ASYNC_JS(bool, CartInit, (char *wasmBuffer, int bytesRead), {
         },
 
         GenImageFontAtlas(resultPtr, glyphs, glyphRecs, glyphCount, fontSize, padding, packMethod) {
+            const glyphs_h = cartGlyphInfo(glyphs);
+            const glyphRecs_h = cartRectangle(glyphRecs);
             const result_h = Module._MemAlloc(20);
-            Module._GenImageFontAtlas(result_h, glyphs, glyphRecs, glyphCount, fontSize, padding, packMethod);
+            Module._GenImageFontAtlas(result_h, glyphs_h, glyphRecs_h, glyphCount, fontSize, padding, packMethod);
+            copyHostToCart(glyphs_h, glyphs, 36);
+            Module._MemFree(glyphs_h);
+            copyHostToCart(glyphRecs_h, glyphRecs, 16);
+            Module._MemFree(glyphRecs_h);
             copyHostToCart(result_h, resultPtr, 20);
             Module._MemFree(result_h);
         },
 
         UnloadFontData(glyphs, glyphCount) {
-            Module._UnloadFontData(glyphs, glyphCount);
+            const glyphs_h = cartGlyphInfo(glyphs);
+            Module._UnloadFontData(glyphs_h, glyphCount);
+            copyHostToCart(glyphs_h, glyphs, 36);
+            Module._MemFree(glyphs_h);
         },
 
         UnloadFont(font) {
@@ -3179,8 +3386,11 @@ EM_ASYNC_JS(bool, CartInit, (char *wasmBuffer, int bytesRead), {
         },
 
         DrawTriangleStrip3D(points, pointCount, color) {
+            const points_h = cartVector3(points);
             const color_h = cartColor(color);
-            Module._DrawTriangleStrip3D(points, pointCount, color_h);
+            Module._DrawTriangleStrip3D(points_h, pointCount, color_h);
+            copyHostToCart(points_h, points, 12);
+            Module._MemFree(points_h);
             Module._MemFree(color_h);
         },
 
@@ -3491,7 +3701,10 @@ EM_ASYNC_JS(bool, CartInit, (char *wasmBuffer, int bytesRead), {
         },
 
         UploadMesh(mesh, dynamic) {
-            Module._UploadMesh(mesh, dynamic);
+            const mesh_h = cartMesh(mesh);
+            Module._UploadMesh(mesh_h, dynamic);
+            copyHostToCart(mesh_h, mesh, 68);
+            Module._MemFree(mesh_h);
         },
 
         UpdateMeshBuffer(mesh, index, data, dataSize, offset) {
@@ -3519,9 +3732,12 @@ EM_ASYNC_JS(bool, CartInit, (char *wasmBuffer, int bytesRead), {
         DrawMeshInstanced(mesh, material, transforms, instances) {
             const mesh_h = cartMesh(mesh);
             const material_h = cartMaterial(material);
-            Module._DrawMeshInstanced(mesh_h, material_h, transforms, instances);
+            const transforms_h = cartMatrix(transforms);
+            Module._DrawMeshInstanced(mesh_h, material_h, transforms_h, instances);
             Module._MemFree(mesh_h);
             Module._MemFree(material_h);
+            copyHostToCart(transforms_h, transforms, 64);
+            Module._MemFree(transforms_h);
         },
 
         GetMeshBoundingBox(resultPtr, mesh) {
@@ -3534,7 +3750,10 @@ EM_ASYNC_JS(bool, CartInit, (char *wasmBuffer, int bytesRead), {
         },
 
         GenMeshTangents(mesh) {
-            Module._GenMeshTangents(mesh);
+            const mesh_h = cartMesh(mesh);
+            Module._GenMeshTangents(mesh_h);
+            copyHostToCart(mesh_h, mesh, 68);
+            Module._MemFree(mesh_h);
         },
 
         ExportMesh(mesh, fileName) {
@@ -3661,48 +3880,26 @@ EM_ASYNC_JS(bool, CartInit, (char *wasmBuffer, int bytesRead), {
         },
 
         SetMaterialTexture(material, mapType, texture) {
+            const material_h = cartMaterial(material);
             const texture_h = cartTexture(texture);
-            Module._SetMaterialTexture(material, mapType, texture_h);
+            Module._SetMaterialTexture(material_h, mapType, texture_h);
+            copyHostToCart(material_h, material, 12);
+            Module._MemFree(material_h);
             Module._MemFree(texture_h);
         },
 
         SetModelMeshMaterial(model, meshId, materialId) {
-            Module._SetModelMeshMaterial(model, meshId, materialId);
-        },
-
-        UpdateModelAnimation(model, anim, frame) {
             const model_h = cartModel(model);
-            const anim_h = cartModelAnimation(anim);
-            Module._UpdateModelAnimation(model_h, anim_h, frame);
+            Module._SetModelMeshMaterial(model_h, meshId, materialId);
+            copyHostToCart(model_h, model, 96);
             Module._MemFree(model_h);
-            Module._MemFree(anim_h);
-        },
-
-        UpdateModelAnimationBones(model, anim, frame) {
-            const model_h = cartModel(model);
-            const anim_h = cartModelAnimation(anim);
-            Module._UpdateModelAnimationBones(model_h, anim_h, frame);
-            Module._MemFree(model_h);
-            Module._MemFree(anim_h);
-        },
-
-        UnloadModelAnimation(anim) {
-            const anim_h = cartModelAnimation(anim);
-            Module._UnloadModelAnimation(anim_h);
-            Module._MemFree(anim_h);
         },
 
         UnloadModelAnimations(animations, animCount) {
-            Module._UnloadModelAnimations(animations, animCount);
-        },
-
-        IsModelAnimationValid(model, anim) {
-            const model_h = cartModel(model);
-            const anim_h = cartModelAnimation(anim);
-            const result = Module._IsModelAnimationValid(model_h, anim_h);
-            Module._MemFree(model_h);
-            Module._MemFree(anim_h);
-            return result;
+            const animations_h = cartModelAnimation(animations);
+            Module._UnloadModelAnimations(animations_h, animCount);
+            copyHostToCart(animations_h, animations, 16);
+            Module._MemFree(animations_h);
         },
 
         CheckCollisionSpheres(center1, radius1, center2, radius2) {
@@ -3983,11 +4180,17 @@ EM_ASYNC_JS(bool, CartInit, (char *wasmBuffer, int bytesRead), {
         },
 
         WaveCrop(wave, initFrame, finalFrame) {
-            Module._WaveCrop(wave, initFrame, finalFrame);
+            const wave_h = cartWave(wave);
+            Module._WaveCrop(wave_h, initFrame, finalFrame);
+            copyHostToCart(wave_h, wave, 20);
+            Module._MemFree(wave_h);
         },
 
         WaveFormat(wave, sampleRate, sampleSize, channels) {
-            Module._WaveFormat(wave, sampleRate, sampleSize, channels);
+            const wave_h = cartWave(wave);
+            Module._WaveFormat(wave_h, sampleRate, sampleSize, channels);
+            copyHostToCart(wave_h, wave, 20);
+            Module._MemFree(wave_h);
         },
 
         LoadWaveSamples(wave) {

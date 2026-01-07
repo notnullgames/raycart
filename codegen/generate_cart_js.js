@@ -174,7 +174,19 @@ const functionsToExclude = [
   'UnloadTextLines',
   'TextRemoveSpaces',
   'GetTextBetween',
-  'TextReplaceBetween'
+  'TextReplaceBetween',
+
+  // Functions with complex pointer returns + pointer params that WAMR can't handle
+  'LoadModelAnimations',
+  'LoadMaterials',
+  'LoadImageColors',
+  'LoadImagePalette',
+
+  // Functions that take ModelAnimation by value can't work due to pointer size mismatch
+  'UpdateModelAnimation',
+  'UpdateModelAnimationBones',
+  'UnloadModelAnimation',
+  'IsModelAnimationValid'
 ]
 
 // Variadic functions that will be implemented cart-side
