@@ -173,7 +173,7 @@ Generates the complete `carts/c/raycart.h` header file from `raylib_api.json`. T
 
 - **Memory management** - `MemAlloc`, `MemFree` (carts have their own)
 - **Callbacks** - Functions with callback parameters (not supported across WASM boundary)
-- **Variadic functions** - `TraceLog`, `TextFormat` (complex to handle in WASM)
+- **Variadic functions** - `TraceLog`, `TextFormat` (complex to handle in WASM) these can be implemented cart-side.
 
 ### Generated content
 

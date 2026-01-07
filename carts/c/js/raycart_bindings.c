@@ -1277,6 +1277,94 @@ static AudioStream audiostream_from_js(JSValue obj) {
   return result;
 }
 
+// Variadic function implementations (cart-side)
+
+// TextFormat - Text formatting with variables (sprintf style)
+static char textFormatBuffer[1024];
+static JSValue js_TextFormat(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
+  if (argc < 1) return JS_UNDEFINED;
+
+  const char* format = string_from_js(argv[0]);
+  if (!format) return JS_UNDEFINED;
+
+  // Build format arguments - convert JS values to C types
+  // This is simplified - only handles common cases
+  char buffer[1024];
+  int offset = 0;
+  int argIdx = 1;
+
+  for (int i = 0; format[i] && offset < sizeof(buffer) - 1; i++) {
+    if (format[i] == '%' && format[i+1] && format[i+1] != '%') {
+      if (argIdx >= argc) break;
+
+      // Simple type detection based on format specifier
+      if (format[i+1] == 'd' || format[i+1] == 'i') {
+        int val = i32_from_js(argv[argIdx++]);
+        offset += snprintf(buffer + offset, sizeof(buffer) - offset, "%d", val);
+        i++;
+      } else if (format[i+1] == 'f') {
+        float val = f32_from_js(argv[argIdx++]);
+        offset += snprintf(buffer + offset, sizeof(buffer) - offset, "%f", val);
+        i++;
+      } else if (format[i+1] == 's') {
+        const char* val = string_from_js(argv[argIdx++]);
+        offset += snprintf(buffer + offset, sizeof(buffer) - offset, "%s", val ? val : "");
+        i++;
+      } else {
+        buffer[offset++] = format[i];
+      }
+    } else if (format[i] == '%' && format[i+1] == '%') {
+      buffer[offset++] = '%';
+      i++;
+    } else {
+      buffer[offset++] = format[i];
+    }
+  }
+  buffer[offset] = '\0';
+
+  JS_FreeCString(ctx, format);
+  return string_to_js(buffer);
+}
+
+// TraceLog - Show trace log messages (LOG_DEBUG, LOG_INFO, LOG_WARNING, LOG_ERROR...)
+static JSValue js_TraceLog(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
+  if (argc < 2) return JS_UNDEFINED;
+
+  int logLevel = i32_from_js(argv[0]);
+  const char* text = string_from_js(argv[1]);
+  if (!text) return JS_UNDEFINED;
+
+  const char* logLevelStr = "UNKNOWN";
+  switch (logLevel) {
+    case 0: logLevelStr = "ALL"; break;
+    case 1: logLevelStr = "TRACE"; break;
+    case 2: logLevelStr = "DEBUG"; break;
+    case 3: logLevelStr = "INFO"; break;
+    case 4: logLevelStr = "WARNING"; break;
+    case 5: logLevelStr = "ERROR"; break;
+    case 6: logLevelStr = "FATAL"; break;
+    case 7: logLevelStr = "NONE"; break;
+  }
+
+  // Simple implementation - just use the text as-is with additional args
+  fprintf(stderr, "[%s] %s", logLevelStr, text);
+
+  // If there are additional arguments, try to print them
+  for (int i = 2; i < argc; i++) {
+    if (JS_IsNumber(argv[i])) {
+      fprintf(stderr, " %d", i32_from_js(argv[i]));
+    } else if (JS_IsString(argv[i])) {
+      const char* str = string_from_js(argv[i]);
+      fprintf(stderr, " %s", str ? str : "");
+      JS_FreeCString(ctx, str);
+    }
+  }
+  fprintf(stderr, "\n");
+
+  JS_FreeCString(ctx, text);
+  return JS_UNDEFINED;
+}
+
 // Function wrappers
 static JSValue js_InitWindow(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
   InitWindow(i32_from_js(argv[0]), i32_from_js(argv[1]), string_from_js(argv[2]));
@@ -4060,4 +4148,8 @@ void expose_things_to_js() {
   JS_SetPropertyStr(ctx, global, "SetAudioStreamPitch", JS_NewCFunction(ctx, js_SetAudioStreamPitch, "SetAudioStreamPitch", 2));
   JS_SetPropertyStr(ctx, global, "SetAudioStreamPan", JS_NewCFunction(ctx, js_SetAudioStreamPan, "SetAudioStreamPan", 2));
   JS_SetPropertyStr(ctx, global, "SetAudioStreamBufferSizeDefault", JS_NewCFunction(ctx, js_SetAudioStreamBufferSizeDefault, "SetAudioStreamBufferSizeDefault", 1));
+
+  // Variadic functions (cart-side implementations)
+  JS_SetPropertyStr(ctx, global, "TextFormat", JS_NewCFunction(ctx, js_TextFormat, "TextFormat", 1));
+  JS_SetPropertyStr(ctx, global, "TraceLog", JS_NewCFunction(ctx, js_TraceLog, "TraceLog", 2));
 }

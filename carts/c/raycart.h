@@ -800,6 +800,42 @@ int main() {
 }
 
 //----------------------------------------------------------------------------------
+// Variadic Function Implementations (cart-side)
+//----------------------------------------------------------------------------------
+
+// TextFormat - Text formatting with variables (sprintf style)
+static char textFormatBuffer[1024];
+static inline const char* TextFormat(const char* text, ...) {
+  va_list args;
+  va_start(args, text);
+  vsnprintf(textFormatBuffer, sizeof(textFormatBuffer), text, args);
+  va_end(args);
+  return textFormatBuffer;
+}
+
+// TraceLog - Show trace log messages (LOG_DEBUG, LOG_INFO, LOG_WARNING, LOG_ERROR...)
+static inline void TraceLog(int logLevel, const char* text, ...) {
+  const char* logLevelStr = "UNKNOWN";
+  switch (logLevel) {
+    case 0: logLevelStr = "ALL"; break;
+    case 1: logLevelStr = "TRACE"; break;
+    case 2: logLevelStr = "DEBUG"; break;
+    case 3: logLevelStr = "INFO"; break;
+    case 4: logLevelStr = "WARNING"; break;
+    case 5: logLevelStr = "ERROR"; break;
+    case 6: logLevelStr = "FATAL"; break;
+    case 7: logLevelStr = "NONE"; break;
+  }
+
+  fprintf(stderr, "[%s] ", logLevelStr);
+  va_list args;
+  va_start(args, text);
+  vfprintf(stderr, text, args);
+  va_end(args);
+  fprintf(stderr, "\n");
+}
+
+//----------------------------------------------------------------------------------
 // Raylib Function Imports (from host)
 //----------------------------------------------------------------------------------
 RC_IMPORT("InitWindow")
