@@ -8,6 +8,7 @@ The entire API is exposed to the webassembly, so anyone can run your standalone 
 - I have not implmented every raylib function, but I am working on adding most things to the code-generators.
 - I will probably skip file/audio callbacks
 - memory-management is generally done cart-side.
+- It's always 60 FPS, since I want it to be uniform. It can run much faster (especially on native) so I might provide an option to override this, but that is how it is for now.
 
 ## carts
 
