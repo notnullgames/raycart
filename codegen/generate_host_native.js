@@ -208,11 +208,6 @@ function generateFunctionCall(func) {
   let lines = []
   let callParams = []
 
-  // If we have primitive pointers, we need module_inst for conversion
-  if (hasPrimitivePointers) {
-    lines.push('wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);')
-  }
-
   // Add parameters, converting primitive pointers and dereferencing struct pointers
   for (const param of params) {
     // Strings are handled automatically by WAMR, don't convert
@@ -313,7 +308,7 @@ ${wrapperFunctions}
 #define WASM_MODELANIMATION_FRAMEPOSES_OFFSET 12
 #define WASM_MODELANIMATION_NAME_OFFSET 16
 
-static uint32_t DeepCopyModelAnimationsToWASM(wasm_module_inst_t module_inst, ModelAnimation *animations, int count) {
+static uint32_t DeepCopyModelAnimationsToWASM(ModelAnimation *animations, int count) {
     if (!animations || count <= 0) return 0;
 
     // Calculate total memory needed
@@ -389,7 +384,6 @@ static uint32_t DeepCopyModelAnimationsToWASM(wasm_module_inst_t module_inst, Mo
 
 // Manual wrappers for functions with complex pointer patterns
 static void raycart_LoadModelAnimations(wasm_exec_env_t exec_env, uint32_t result_ptr, const char *fileName, uint32_t animCount) {
-    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     int *animCount_native = (int *)wasm_runtime_addr_app_to_native(module_inst, animCount);
 
     // Load animations in host memory
@@ -397,7 +391,7 @@ static void raycart_LoadModelAnimations(wasm_exec_env_t exec_env, uint32_t resul
 
     if (host_anims && *animCount_native > 0) {
         // Deep copy to WASM memory
-        uint32_t wasm_ptr = DeepCopyModelAnimationsToWASM(module_inst, host_anims, *animCount_native);
+        uint32_t wasm_ptr = DeepCopyModelAnimationsToWASM(host_anims, *animCount_native);
 
         // Free host memory
         UnloadModelAnimations(host_anims, *animCount_native);
@@ -414,7 +408,7 @@ static void raycart_LoadModelAnimations(wasm_exec_env_t exec_env, uint32_t resul
 }
 
 // Deep copy helper for Material with nested MaterialMap array
-static uint32_t DeepCopyMaterialsToWASM(wasm_module_inst_t module_inst, Material *materials, int count) {
+static uint32_t DeepCopyMaterialsToWASM(Material *materials, int count) {
     if (!materials || count <= 0) return 0;
 
     #define MAX_MATERIAL_MAPS 12
@@ -466,7 +460,6 @@ static uint32_t DeepCopyMaterialsToWASM(wasm_module_inst_t module_inst, Material
 }
 
 static void raycart_LoadMaterials(wasm_exec_env_t exec_env, uint32_t result_ptr, const char *fileName, uint32_t materialCount) {
-    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     int *materialCount_native = (int *)wasm_runtime_addr_app_to_native(module_inst, materialCount);
 
     // Load materials in host memory
@@ -474,7 +467,7 @@ static void raycart_LoadMaterials(wasm_exec_env_t exec_env, uint32_t result_ptr,
 
     if (host_mats && *materialCount_native > 0) {
         // Deep copy to WASM memory
-        uint32_t wasm_ptr = DeepCopyMaterialsToWASM(module_inst, host_mats, *materialCount_native);
+        uint32_t wasm_ptr = DeepCopyMaterialsToWASM(host_mats, *materialCount_native);
 
         // Note: LoadMaterials loads persistent GPU resources, so we don't unload here
         // The materials still reference the GPU textures/shaders
@@ -490,8 +483,6 @@ static void raycart_LoadMaterials(wasm_exec_env_t exec_env, uint32_t result_ptr,
 }
 
 static void raycart_LoadImageColors(wasm_exec_env_t exec_env, uint32_t result_ptr, Image *image) {
-    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
-
     Color *result = LoadImageColors(*image);
 
     if (result) {
@@ -517,7 +508,6 @@ static void raycart_LoadImageColors(wasm_exec_env_t exec_env, uint32_t result_pt
 }
 
 static void raycart_LoadImagePalette(wasm_exec_env_t exec_env, uint32_t result_ptr, Image *image, int maxPaletteSize, uint32_t colorCount) {
-    wasm_module_inst_t module_inst = wasm_runtime_get_module_inst(exec_env);
     int *colorCount_native = (int *)wasm_runtime_addr_app_to_native(module_inst, colorCount);
 
     Color *result = LoadImagePalette(*image, maxPaletteSize, colorCount_native);
