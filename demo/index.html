@@ -53,8 +53,15 @@
         }
       })
     }
-
     const canvas = document.getElementById('canvas')
-    const host = await loadCart('textures_logo_c.zip', { canvas })
+
+    // handle #cart URL
+    let cart = 'textures_logo_c'
+
+    if (document.location.hash) {
+      cart = document.location.hash.slice(1)
+    }
+
+    const host = await loadCart(`${cart}.zip`, { canvas })
   </script>
 </html>
