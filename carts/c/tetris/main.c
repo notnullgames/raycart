@@ -104,7 +104,8 @@ static int DeleteCompleteLines();
 // Game Module Functions Definition
 //--------------------------------------------------------------------------------------
 
-void CartInit(void) {
+void CartInit(void)
+{
   InitWindow(screenWidth, screenHeight, "classic game: tetris");
   GameInit();
 }
@@ -276,97 +277,94 @@ void UpdateGame(void)
 // Draw game (one frame)
 void DrawGame(void)
 {
-    BeginDrawing();
 
-        ClearBackground(RAYWHITE);
+    ClearBackground(RAYWHITE);
 
-        if (!gameOver)
+    if (!gameOver)
+    {
+        // Draw gameplay area
+        Vector2 offset;
+        offset.x = screenWidth/2 - (GRID_HORIZONTAL_SIZE*SQUARE_SIZE/2) - 50;
+        offset.y = screenHeight/2 - ((GRID_VERTICAL_SIZE - 1)*SQUARE_SIZE/2) + SQUARE_SIZE*2;
+
+        offset.y -= 50;     // NOTE: Harcoded position!
+
+        int controller = offset.x;
+
+        for (int j = 0; j < GRID_VERTICAL_SIZE; j++)
         {
-            // Draw gameplay area
-            Vector2 offset;
-            offset.x = screenWidth/2 - (GRID_HORIZONTAL_SIZE*SQUARE_SIZE/2) - 50;
-            offset.y = screenHeight/2 - ((GRID_VERTICAL_SIZE - 1)*SQUARE_SIZE/2) + SQUARE_SIZE*2;
-
-            offset.y -= 50;     // NOTE: Harcoded position!
-
-            int controller = offset.x;
-
-            for (int j = 0; j < GRID_VERTICAL_SIZE; j++)
+            for (int i = 0; i < GRID_HORIZONTAL_SIZE; i++)
             {
-                for (int i = 0; i < GRID_HORIZONTAL_SIZE; i++)
+                // Draw each square of the grid
+                if (grid[i][j] == EMPTY)
                 {
-                    // Draw each square of the grid
-                    if (grid[i][j] == EMPTY)
-                    {
-                        DrawLine(offset.x, offset.y, offset.x + SQUARE_SIZE, offset.y, LIGHTGRAY );
-                        DrawLine(offset.x, offset.y, offset.x, offset.y + SQUARE_SIZE, LIGHTGRAY );
-                        DrawLine(offset.x + SQUARE_SIZE, offset.y, offset.x + SQUARE_SIZE, offset.y + SQUARE_SIZE, LIGHTGRAY );
-                        DrawLine(offset.x, offset.y + SQUARE_SIZE, offset.x + SQUARE_SIZE, offset.y + SQUARE_SIZE, LIGHTGRAY );
-                        offset.x += SQUARE_SIZE;
-                    }
-                    else if (grid[i][j] == FULL)
-                    {
-                        DrawRectangle(offset.x, offset.y, SQUARE_SIZE, SQUARE_SIZE, GRAY);
-                        offset.x += SQUARE_SIZE;
-                    }
-                    else if (grid[i][j] == MOVING)
-                    {
-                        DrawRectangle(offset.x, offset.y, SQUARE_SIZE, SQUARE_SIZE, DARKGRAY);
-                        offset.x += SQUARE_SIZE;
-                    }
-                    else if (grid[i][j] == BLOCK)
-                    {
-                        DrawRectangle(offset.x, offset.y, SQUARE_SIZE, SQUARE_SIZE, LIGHTGRAY);
-                        offset.x += SQUARE_SIZE;
-                    }
-                    else if (grid[i][j] == FADING)
-                    {
-                        DrawRectangle(offset.x, offset.y, SQUARE_SIZE, SQUARE_SIZE, fadingColor);
-                        offset.x += SQUARE_SIZE;
-                    }
+                    DrawLine(offset.x, offset.y, offset.x + SQUARE_SIZE, offset.y, LIGHTGRAY );
+                    DrawLine(offset.x, offset.y, offset.x, offset.y + SQUARE_SIZE, LIGHTGRAY );
+                    DrawLine(offset.x + SQUARE_SIZE, offset.y, offset.x + SQUARE_SIZE, offset.y + SQUARE_SIZE, LIGHTGRAY );
+                    DrawLine(offset.x, offset.y + SQUARE_SIZE, offset.x + SQUARE_SIZE, offset.y + SQUARE_SIZE, LIGHTGRAY );
+                    offset.x += SQUARE_SIZE;
                 }
-
-                offset.x = controller;
-                offset.y += SQUARE_SIZE;
+                else if (grid[i][j] == FULL)
+                {
+                    DrawRectangle(offset.x, offset.y, SQUARE_SIZE, SQUARE_SIZE, GRAY);
+                    offset.x += SQUARE_SIZE;
+                }
+                else if (grid[i][j] == MOVING)
+                {
+                    DrawRectangle(offset.x, offset.y, SQUARE_SIZE, SQUARE_SIZE, DARKGRAY);
+                    offset.x += SQUARE_SIZE;
+                }
+                else if (grid[i][j] == BLOCK)
+                {
+                    DrawRectangle(offset.x, offset.y, SQUARE_SIZE, SQUARE_SIZE, LIGHTGRAY);
+                    offset.x += SQUARE_SIZE;
+                }
+                else if (grid[i][j] == FADING)
+                {
+                    DrawRectangle(offset.x, offset.y, SQUARE_SIZE, SQUARE_SIZE, fadingColor);
+                    offset.x += SQUARE_SIZE;
+                }
             }
 
-            // Draw incoming piece (hardcoded)
-            offset.x = 500;
-            offset.y = 45;
-
-            int controler = offset.x;
-
-            for (int j = 0; j < 4; j++)
-            {
-                for (int i = 0; i < 4; i++)
-                {
-                    if (incomingPiece[i][j] == EMPTY)
-                    {
-                        DrawLine(offset.x, offset.y, offset.x + SQUARE_SIZE, offset.y, LIGHTGRAY );
-                        DrawLine(offset.x, offset.y, offset.x, offset.y + SQUARE_SIZE, LIGHTGRAY );
-                        DrawLine(offset.x + SQUARE_SIZE, offset.y, offset.x + SQUARE_SIZE, offset.y + SQUARE_SIZE, LIGHTGRAY );
-                        DrawLine(offset.x, offset.y + SQUARE_SIZE, offset.x + SQUARE_SIZE, offset.y + SQUARE_SIZE, LIGHTGRAY );
-                        offset.x += SQUARE_SIZE;
-                    }
-                    else if (incomingPiece[i][j] == MOVING)
-                    {
-                        DrawRectangle(offset.x, offset.y, SQUARE_SIZE, SQUARE_SIZE, GRAY);
-                        offset.x += SQUARE_SIZE;
-                    }
-                }
-
-                offset.x = controler;
-                offset.y += SQUARE_SIZE;
-            }
-
-            DrawText("INCOMING:", offset.x, offset.y - 100, 10, GRAY);
-            DrawText(TextFormat("LINES:      %04i", lines), offset.x, offset.y + 20, 10, GRAY);
-
-            if (pause) DrawText("GAME PAUSED", screenWidth/2 - MeasureText("GAME PAUSED", 40)/2, screenHeight/2 - 40, 40, GRAY);
+            offset.x = controller;
+            offset.y += SQUARE_SIZE;
         }
-        else DrawText("PRESS [ENTER] TO PLAY AGAIN", GetScreenWidth()/2 - MeasureText("PRESS [ENTER] TO PLAY AGAIN", 20)/2, GetScreenHeight()/2 - 50, 20, GRAY);
 
-    EndDrawing();
+        // Draw incoming piece (hardcoded)
+        offset.x = 500;
+        offset.y = 45;
+
+        int controler = offset.x;
+
+        for (int j = 0; j < 4; j++)
+        {
+            for (int i = 0; i < 4; i++)
+            {
+                if (incomingPiece[i][j] == EMPTY)
+                {
+                    DrawLine(offset.x, offset.y, offset.x + SQUARE_SIZE, offset.y, LIGHTGRAY );
+                    DrawLine(offset.x, offset.y, offset.x, offset.y + SQUARE_SIZE, LIGHTGRAY );
+                    DrawLine(offset.x + SQUARE_SIZE, offset.y, offset.x + SQUARE_SIZE, offset.y + SQUARE_SIZE, LIGHTGRAY );
+                    DrawLine(offset.x, offset.y + SQUARE_SIZE, offset.x + SQUARE_SIZE, offset.y + SQUARE_SIZE, LIGHTGRAY );
+                    offset.x += SQUARE_SIZE;
+                }
+                else if (incomingPiece[i][j] == MOVING)
+                {
+                    DrawRectangle(offset.x, offset.y, SQUARE_SIZE, SQUARE_SIZE, GRAY);
+                    offset.x += SQUARE_SIZE;
+                }
+            }
+
+            offset.x = controler;
+            offset.y += SQUARE_SIZE;
+        }
+
+        DrawText("INCOMING:", offset.x, offset.y - 100, 10, GRAY);
+        DrawText(TextFormat("LINES:      %04i", lines), offset.x, offset.y + 20, 10, GRAY);
+
+        if (pause) DrawText("GAME PAUSED", screenWidth/2 - MeasureText("GAME PAUSED", 40)/2, screenHeight/2 - 40, 40, GRAY);
+    }
+    else DrawText("PRESS [ENTER] TO PLAY AGAIN", GetScreenWidth()/2 - MeasureText("PRESS [ENTER] TO PLAY AGAIN", 20)/2, GetScreenHeight()/2 - 50, 20, GRAY);
 }
 
 //--------------------------------------------------------------------------------------
