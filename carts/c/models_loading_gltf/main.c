@@ -34,6 +34,8 @@ unsigned int animCurrentFrame = 0;
 ModelAnimation *modelAnimations;
 
 void CartInit() {
+    InitWindow(800, 450, "raylib [core] example - basic window");
+    
     camera.position = (Vector3){ 6.0f, 6.0f, 6.0f };    // Camera position
     camera.target = (Vector3){ 0.0f, 2.0f, 0.0f };      // Camera looking at point
     camera.up = (Vector3){ 0.0f, 1.0f, 0.0f };          // Camera up vector (rotation towards target)
@@ -42,7 +44,7 @@ void CartInit() {
 
     model = LoadModel("robot.glb");
 
-    modelAnimations = LoadModelAnimations("robot.glb", &animsCount);
+    // modelAnimations = LoadModelAnimations("robot.glb", &animsCount);
 }
 
 void CartUpdate () {
@@ -58,7 +60,7 @@ void CartUpdate () {
         // Update model animation
         ModelAnimation anim = modelAnimations[animIndex];
         animCurrentFrame = (animCurrentFrame + 1)%anim.frameCount;
-        UpdateModelAnimation(model, anim, animCurrentFrame);
+        // UpdateModelAnimation(model, anim, animCurrentFrame);
     }
     //----------------------------------------------------------------------------------
 
