@@ -38,30 +38,34 @@
     import wasmLoader from './raycart.mjs'
 
     // Takes a zip-file with main.wasm and loads it with raylib imports
-    // set any emscripten-options you want in options
+    // set any emscripten-options (canvas is an important one!) in options
     // arguments/preRun will merge
     async function loadCart(zipFile, options = {}) {
+      const zipBase = zipFile.split('/').pop()
       const zipBytes = new Uint8Array(await fetch(zipFile).then((r) => r.arrayBuffer()))
       const fs = await fflatefs(zipBytes)
       return wasmLoader({
         ...options,
-        arguments: options?.arguments || [zipFile],
+        arguments: options?.arguments || [zipBase],
         preRun(mod) {
-          mod.FS.writeFile(zipFile, zipBytes)
+          mod.FS.writeFile(zipBase, zipBytes)
           mod.wasi_snapshot_preview1 = new WasiPreview1({ fs })
           options?.preRun && options.preRun(mod)
         }
       })
     }
-    const canvas = document.getElementById('canvas')
 
     // handle #cart URL
     let cart = 'textures_logo_c'
-
     if (document.location.hash) {
       cart = document.location.hash.slice(1)
     }
+    window.addEventListener('hashchange', () => {
+      // reload is required to clear it out
+      document.location.reload()
+    })
 
-    const host = await loadCart(`${cart}.zip`, { canvas })
+    const host = await loadCart(`carts/${cart}.zip`, { canvas: document.getElementById('canvas') })
+    console.log(host)
   </script>
 </html>

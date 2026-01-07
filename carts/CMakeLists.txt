@@ -59,7 +59,7 @@ function (BUILD_CART_C name)
     COMMAND ${CMAKE_COMMAND} -E copy_directory "${CART_DIR}" "${CART_TEMP}"
     COMMAND ${CMAKE_COMMAND} -E rm -f "${CART_TEMP}/*.c"
     COMMAND ${CMAKE_COMMAND} -E rm -f "${CART_TEMP}/*.h"
-    COMMAND ${CMAKE_COMMAND} -E chdir "${CART_TEMP}" ${CMAKE_COMMAND} -E tar "cf" "../../../demo/${name}_c.zip" --format=zip .
+    COMMAND ${CMAKE_COMMAND} -E chdir "${CART_TEMP}" ${CMAKE_COMMAND} -E tar "cf" "../../../demo/carts/${name}_c.zip" --format=zip .
     COMMAND ${CMAKE_COMMAND} -E rm -rf "${CART_TEMP}"
     DEPENDS ${name}_c_wasm
     COMMENT "Creating cart ${name}_c.zip"
@@ -75,7 +75,7 @@ function (BUILD_CART_JS name)
     COMMAND ${CMAKE_COMMAND} -E make_directory "${CART_TEMP}"
     COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:cart-js>" "${CART_TEMP}/main.wasm"
     COMMAND ${CMAKE_COMMAND} -E copy_directory "${CART_DIR}" "${CART_TEMP}"
-    COMMAND ${CMAKE_COMMAND} -E chdir "${CART_TEMP}" ${CMAKE_COMMAND} -E tar "cf" "../../../demo/${name}_js.zip" --format=zip .
+    COMMAND ${CMAKE_COMMAND} -E chdir "${CART_TEMP}" ${CMAKE_COMMAND} -E tar "cf" "../../../demo/carts/${name}_js.zip" --format=zip .
     COMMAND ${CMAKE_COMMAND} -E rm -rf "${CART_TEMP}"
     DEPENDS cart-js 
     COMMENT "Creating cart ${name}_js.zip"
@@ -92,7 +92,7 @@ function(BUILD_CART_NIM name)
       COMMAND ${CMAKE_COMMAND} -E rm -f "${CART_TEMP}/*.nim"
       # COMMAND CC=${CMAKE_C_COMPILER} nim c --cc:env -d:release -d:wasi -d:useMalloc --cpu:wasm32 --os:any --passC:"-D_WASI_EMULATED_SIGNAL" --passL:"-lwasi-emulated-signal" --passL:"-Wl,--allow-undefined" -o:${CART_TEMP}/main.wasm --path:${CART_DIR}/../ --import:zip ${CART_DIR}/main.nim
       COMMAND CC=${CMAKE_C_COMPILER} nim c --threads:off --noMain --cc:env -d:release -d:wasi -d:useMalloc --cpu:wasm32 --os:any --passC:"-D_WASI_EMULATED_SIGNAL" --passL:"-lwasi-emulated-signal" --passL:"-Wl,--allow-undefined" -o:${CART_TEMP}/main.wasm ${CART_DIR}/main.nim
-      COMMAND ${CMAKE_COMMAND} -E chdir "${CART_TEMP}" ${CMAKE_COMMAND} -E tar "cf" "../../../demo/${name}_nim.zip" --format=zip .
+      COMMAND ${CMAKE_COMMAND} -E chdir "${CART_TEMP}" ${CMAKE_COMMAND} -E tar "cf" "../../../demo/carts/${name}_nim.zip" --format=zip .
       # COMMAND ${CMAKE_COMMAND} -E rm -rf "${CART_TEMP}"
       COMMENT "Creating cart ${name}_nim.zip"
       VERBATIM
@@ -120,7 +120,7 @@ function(BUILD_CART_RUST name)
       COMMAND ${CMAKE_COMMAND} -E remove_directory "${CART_TEMP}/target"
       COMMAND ${CMAKE_COMMAND} -E rm -f "${CART_TEMP}/Cargo.toml"
       COMMAND ${CMAKE_COMMAND} -E rm -f "${CART_TEMP}/Cargo.lock"
-      COMMAND ${CMAKE_COMMAND} -E chdir "${CART_TEMP}" ${CMAKE_COMMAND} -E tar "cf" "../../../demo/${name}_rust.zip" --format=zip .
+      COMMAND ${CMAKE_COMMAND} -E chdir "${CART_TEMP}" ${CMAKE_COMMAND} -E tar "cf" "../../../demo/carts/${name}_rust.zip" --format=zip .
       COMMAND ${CMAKE_COMMAND} -E rm -rf "${CART_TEMP}"
       COMMENT "Creating cart ${name}_rust.zip"
       VERBATIM
@@ -139,7 +139,7 @@ function (BUILD_CART_NELUA name)
     COMMAND ${CMAKE_COMMAND} -E copy_directory "${CART_DIR}" "${CART_TEMP}"
     COMMAND ${CMAKE_COMMAND} -E rm -f "${CART_TEMP}/*.nelua"
     COMMAND nelua --cache-dir "${CART_TEMP}/nelua_cache" --cflags=${NELUA_CFLAGS} -L "${CMAKE_CURRENT_SOURCE_DIR}/nelua" "${CMAKE_CURRENT_SOURCE_DIR}/nelua/${name}/main.nelua" -r --cc "${CMAKE_C_COMPILER}" -o "${CART_TEMP}/main.wasm"
-    COMMAND ${CMAKE_COMMAND} -E chdir "${CART_TEMP}" ${CMAKE_COMMAND} -E tar "cf" "../../../demo/${name}_nelua.zip" --format=zip .
+    COMMAND ${CMAKE_COMMAND} -E chdir "${CART_TEMP}" ${CMAKE_COMMAND} -E tar "cf" "../../../demo/carts/${name}_nelua.zip" --format=zip .
     COMMAND ${CMAKE_COMMAND} -E rm -rf "${CART_TEMP}"
     COMMENT "Creating cart ${name}_nelua.zip"
     VERBATIM

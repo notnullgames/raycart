@@ -57,6 +57,7 @@ npm run format
 
 # generate all the source-files from the raylib JSON
 # be careful if you have modified anything
+# it will wipe out all generated source
 # this is not really needed for most people
 npm run codegen
 ```
