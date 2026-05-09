@@ -81,14 +81,6 @@ static int fadeLineCounter = 0;
 // Based on level
 static int gravitySpeed = 30;
 
-//------------------------------------------------------------------------------------
-// Module Functions Declaration (local)
-//------------------------------------------------------------------------------------
-
-static void UpdateGame(void);       // Update game (one frame)
-static void DrawGame(void);         // Draw game (one frame)
-static void UpdateDrawFrame(void);  // Update and Draw (one frame)
-
 // Additional module functions
 static bool Createpiece();
 static void GetRandompiece();
@@ -102,17 +94,6 @@ static int DeleteCompleteLines();
 //--------------------------------------------------------------------------------------
 // Game Module Functions Definition
 //--------------------------------------------------------------------------------------
-
-int main() {
-    InitWindow(screenWidth, screenHeight, "classic game: tetris");
-    return 0;
-}
-
-// Update and Draw (one frame)
-void CartUpdate(void) {
-    UpdateGame();
-    DrawGame();
-}
 
 // Initialize game variables
 void CartInit(void)
@@ -363,6 +344,18 @@ void DrawGame(void)
     }
     else DrawText("PRESS [ENTER] TO PLAY AGAIN", GetScreenWidth()/2 - MeasureText("PRESS [ENTER] TO PLAY AGAIN", 20)/2, GetScreenHeight()/2 - 50, 20, GRAY);
 }
+
+int main() {
+    InitWindow(screenWidth, screenHeight, "classic game: tetris");
+    return 0;
+}
+
+// Update and Draw (one frame)
+void CartUpdate(void) {
+    UpdateGame();
+    DrawGame();
+}
+
 
 //--------------------------------------------------------------------------------------
 // Additional module functions

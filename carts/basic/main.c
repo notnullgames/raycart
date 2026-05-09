@@ -23,6 +23,5 @@ void CartUpdate(void) {
 
 int main(void) {
     InitWindow(800, 450, "raycart basic");
-    SetTargetFPS(60);
     return 0;
 }

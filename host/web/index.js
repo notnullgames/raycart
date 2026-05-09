@@ -8,8 +8,8 @@ const canvas = document.getElementById('canvas')
 canvas.width = 800
 canvas.height = 450
 
-const rl = new Raylib({ canvas })
 const wasi = new WasiPreview1()
+const rl = new Raylib({ canvas, fs: wasi.fs })
 
 // ?cart=foo.wasm loads host/web/carts/foo.wasm; default is "basic.wasm"
 const cartName = new URLSearchParams(location.search).get('cart') ?? 'basic.wasm'
@@ -70,20 +70,26 @@ const CartPreload = exports.CartPreload ?? null
 const CartInit = exports.CartInit ?? null
 const CartUpdate = exports.CartUpdate ?? null
 
-if (CartPreload) {
+if (zip) {
+  // Pre-load all zip assets into the raylib host (for synchronous LoadTexture etc.)
+  const assetMap = new Map()
+  for (const [filename, fileData] of Object.entries(zip.files)) {
+    if (!fileData.dir && filename !== 'main.wasm') {
+      const content = await fileData.async('uint8array')
+      assetMap.set(filename, content)
+      wasi.fs.writeFileSync(filename, content)
+    }
+  }
+  await rl.preloadAssets(assetMap)
+}
+
+if (CartPreload && zip) {
   const files = Object.keys(zip.files)
   const totalFiles = files.length
   let processedFiles = 0
-
   for (const filename of files) {
-    const fileData = zip.files[filename]
-    if (!fileData.dir && filename !== 'main.wasm') {
-      const content = await fileData.async('uint8array')
-      wasi.fs.writeFileSync(filename, content)
-    }
     processedFiles++
-    const progress = processedFiles / totalFiles
-    CartPreload(progress)
+    CartPreload(processedFiles / totalFiles)
   }
 }
 

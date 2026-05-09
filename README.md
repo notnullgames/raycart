@@ -1,8 +1,8 @@
 This is a webassembly host-implementation for raylib. Essentially, all raylib functions are exposed to your wasm.
 
-My main test is C code that looks like normal C raylib, but is compiled with wasi-sdk, but you should be able to use the same host with wasm made in nelua, assemblyscript, walt, go, or any other language that compiles to wasm. All assets are available in the WASI filesystem, and should work like normal.
+My main testing target is C code that looks like normal raylib, and is compiled with wasi-sdk, but you should be able to use the same host with wasm made in nelua, assemblyscript, walt, go, or any other language that compiles to wasm. All assets are available in the WASI filesystem, and should work like normal.
 
-The "web" in webassembly is a misnomer here. It's not just for the web (but will run there) it's a sandboxed runtime abstraction, for all kinds of places. A real strength is no-recompile is needed, and it will run on many things (browser, native on desktop computer, barebones pi, esp32, etc.)
+The "web" in webassembly is a misnomer here. It's not just for the web (but will run there) it's a sandboxed runtime abstraction, for all kinds of places. No recompile is needed, and it will run on many things (browser, native on desktop computer, barebones pi, esp32, etc.)
 
 I am still working on filling in all the raylib API. A lot is missing.
 
