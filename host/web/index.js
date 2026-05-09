@@ -23,7 +23,6 @@ let wasmBytes
 
 if (wasmUrl.pathname.endsWith('.zip')) {
   zip = await JSZip.loadAsync(cartBytes)
-  console.log(zip.files)
   wasmBytes = await zip.files['main.wasm'].async('uint8array')
 } else {
   wasmBytes = cartBytes
@@ -77,7 +76,9 @@ if (zip) {
     if (!fileData.dir && filename !== 'main.wasm') {
       const content = await fileData.async('uint8array')
       assetMap.set(filename, content)
-      wasi.fs.writeFileSync(filename, content)
+      try {
+        wasi.fs.writeFileSync(filename, content)
+      } catch {}
     }
   }
   await rl.preloadAssets(assetMap)
