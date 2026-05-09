@@ -26,13 +26,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install emscripten
-        uses: mymindstorm/setup-emsdk@v14
+      - name: Install WASI SDK
+        uses: konsumer/install-wasi-sdk@v1
         with:
-          version: 'latest'
+          version: '33'
+          install-path: '/opt/wasi-sdk'
+          add-to-path: 'true'
 
       - name: Build Web Host
-        run: npm run build:web
+        run: npm run build:carts
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
@@ -40,7 +42,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: 'demo'
+          path: 'host/web'
 
       - name: Deploy to GitHub Pages
         id: deployment

@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>raycart</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        background: #111;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100dvh;
+        font-family: monospace;
+        color: #aaa;
+        gap: 10px;
+      }
+      canvas {
+        display: block;
+        border: 1px solid #333;
+        image-rendering: pixelated;
+      }
+      #status {
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="canvas"></canvas>
+    <div id="status">loading…</div>
+    <ul>
+      <li>
+        <a href="?cart=basic.wasm">basic</a>
+        <a href="?cart=core_basic_window.wasm">core_basic_window</a>
+        <a href="?cart=models_loading_gltf.zip">models_loading_gltf</a>
+        <a href="?cart=shapes_colors_palette.wasm">shapes_colors_palette</a>
+        <a href="?cart=tetris.wasm">tetris</a>
+        <a href="?cart=textures_logo.zip">textures_logo</a>
+      </li>
+    </ul>
+    <script type="importmap">
+      {
+        "imports": {
+          "@easywasm/wasi": "https://esm.sh/@easywasm/wasi",
+          "jszip": "https://esm.sh/jszip"
+        }
+      }
+    </script>
+    <script type="module" src="index.js"></script>
+  </body>
+</html>

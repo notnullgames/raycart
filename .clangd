@@ -1,0 +1,5 @@
+CompileFlags:
+  Add:
+    - -I./include
+    - -D__wasm__
+    - --target=wasm32-wasip1

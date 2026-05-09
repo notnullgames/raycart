@@ -1,21 +1,17 @@
 {
   "name": "raycart",
-  "version": "0.0.0",
+  "version": "0.0.1",
+  "description": "Wasm host exposing the full raylib API — compile games with wasi-sdk, run on native or web without recompile",
   "type": "module",
   "scripts": {
-    "build": "npx -y npm-run-all --parallel build:nativefull build:web",
-    "build:nativefull": "cmake -B build -DCMAKE_BUILD_TYPE=Debug -DBUILD_CARTS=ON -DBUILD_HOST=ON && cmake --build build",
-    "build:native": "cmake -B build -DCMAKE_BUILD_TYPE=Debug -DBUILD_CARTS=OFF -DBUILD_HOST=ON && cmake --build build",
-    "build:web": "emcmake cmake -B wbuild -DCMAKE_BUILD_TYPE=Debug -DPLATFORM=Web -DBUILD_CARTS=OFF -DBUILD_HOST=ON && cmake --build wbuild",
-    "build:carts": "cmake -B build -DCMAKE_BUILD_TYPE=Debug -DBUILD_CARTS=ON -DBUILD_HOST=OFF && cmake --build build --target=carts",
-    "codegen": "npx -y npm-run-all --parallel codegen:*",
-    "codegen:hostweb": "node codegen/generate_host_web.js",
-    "codegen:hostnative": "node codegen/generate_host_native.js",
-    "codegen:cart": "node codegen/generate_cart_c.js",
-    "codegen:cartjs": "node codegen/generate_cart_js.js",
-    "start": "npx -y live-server demo",
-    "prestart": "npx -y npm-run-all --parallel build:web build:carts",
-    "clean": "npx -y rimraf build wbuild demo/*.mjs demo/carts/*",
-    "format": "npx -y prettier -w ."
+    "codegen": "node scripts/gen_cart_c_header.js",
+    "build:carts": "node scripts/build_cart.js carts/*",
+    "build": "npm run codegen && npm run build:carts",
+    "start": "npm run build:carts && npx -y live-server --port=3000 host/web",
+    "test": "node --test",
+    "fmt": "npx -y prettier -w ."
+  },
+  "devDependencies": {
+    "adm-zip": "^0.5.17"
   }
 }

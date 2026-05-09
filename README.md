@@ -1,86 +1,23 @@
-The idea here is a webassembly-host implementation of [raylib](https://www.raylib.com/) 5.5 for native & web.
+This is a webassembly host-implementation for raylib. Essentially, all raylib functions are exposed to your wasm.
 
-The entire API is exposed to the webassembly, so anyone can run your standalone game on web or without a web-browser (native wasm-host) without recompiling it.
+My main test is C code that looks like normal C raylib, but is compiled with wasi-sdk, but you should be able to use the same host with wasm made in nelua, assemblyscript, walt, go, or any other language that compiles to wasm. All assets are available in the WASI filesystem, and should work like normal.
 
-## differences from raylib
+The "web" in webassembly is a misnomer here. It's not just for the web (but will run there) it's a sandboxed runtime abstraction, for all kinds of places. A real strength is no-recompile is needed, and it will run on many things (browser, native on desktop computer, barebones pi, esp32, etc.)
 
-- export `CartInit`/`CartUpdate` for your code, instead of `main` using window/draw-management stuff (`SetTargetFPS`, `WindowShouldClose`, `BeginDrawing`, `EndDrawing`, `CloseWindow`, etc.) I might drop `CartInit` (and use main) but it's kinda nice to seperate them.
-- I have not implmented every raylib function, but I am working on adding most things to the code-generators.
-- I will probably skip file/audio callbacks
-- memory-management is generally done cart-side.
-- It's always 60 FPS, since I want it to be uniform. It can run much faster (especially on native) so I might provide an option to override this, but that is how it is for now.
+I am still working on filling in all the raylib API. A lot is missing.
 
-## carts
+## cart
 
-You make your game as a "cart" which is just a zip-file with `main.wasm` and any assets you want access to.
+A "cart" is just a wasm file, or a zip file with `main.wasm` and any assets it needs.
 
-Technically, you can write your cart in any language that compiles to (or can be interpretred in) webassembly, but practically, it helps to have a header to make it more ergonomic.
+## API differences
 
-Here are the cart-languages we directly support, now:
-
-- C - it's very similar to regular raylib
-- Javascript - Uses quickjs main.wasm, and put your game in main.js (in cart.) This is not as efficient (slower, bigger file) as walt/assemblyscript, so choose those, if you can.
-
-I am also working on these, but they are not as complete:
-
-- Javascript (web) - this is similar to [raylib-wasm](https://github.com/konsumer/raylib-wasm), but you can also mount cart for filesystem, and dynamically code your game in JS, using the browser's engine, not QuickJS. This uses the main.js in the cart, and you can skip the QuickJS main.wasm, if you don't need your game to work on native. The syntax should be mostly identical to QuickJS carts.
-- [Nelua](https://nelua.io/) - Use a lua-like language to make a compiled cart
-- [Assemblyscript](https://www.assemblyscript.org/) - Use a language very similar to typescript/javascript to make a compiled cart
-- [Walt](https://github.com/ballercat/walt) - Use a language very similar to javascript to make a light compiled cart
-- Rust
-
-## development
-
-You will need a C compiler (clang, etc) cmake, emscripten (for web host) and carts have verious dependencies (C carts need wasi-sdk, nelua, rust, etc.) I will try to get this all building in CI, so you can find it in [releases](https://github.com/notnullgames/raycart/releases), and not need to build anything yourself.
-
-```sh
-# build carts & web runtime, and start a local reloading web-server
-npm start
-
-# delete any built files
-npm run clean
-
-# build carts and web/native runtime
-npm run build
-
-# build only native runtime
-npm run build:native
-
-# build only carts
-npm run build:carts
-
-# build only web runtime
-npm run build:web
-
-# format your JS code
-npm run format
-
-# generate all the source-files from the raylib JSON
-# be careful if you have modified anything
-# it will wipe out all generated source
-# this is not really needed for most people
-npm run codegen
-```
-
-### web
-
-Have a look at [index.html](demo/index.html) for how to use it in your own web-project. At some point I will publish it on CDNs and add a web-bundle to CI to make it a bit easier to integrate. If you have emscritpen installed, you can just run `npm start` to see it, locally.
-
-### native
-
-You can also use the native runtime (without a browser) like this:
-
-```sh
-./build/host/raycart demo/textures_logo_c.zip
-```
-
-## todo
-
-- host that works on ESP32 and other very low-end devices (2D-only, etc)
-- live-reloading web-build
-- live-reloading native build
-- Don't manage `BeginDrawing`/`EndDrawing` (require user to call these) so you can do other stuff in your loop (textures, etc)
-- self-running (like love2d) and run a directory (instead of zip)
+- Lifecycle exports are split up like this:
+  - `_start` - this is a WASI thing, it calls `main()` in C. Setup the basic screen here.
+  - `CartPreload` - This is called before assets are loaded, and you can use it to show a progress-bar or something
+  - `CartInit` - assets are loaded in filesystem, so you can load images and stuff here
+  - `CartUpdate` - called every frame (about 60FPS on mac web)
+- All variable-argument functions (`Tracelog`, etc) should do their text-formatting cart-side. `Tracelog` just logs plain string with a type-tag, for example, but in practice it works the same because the C header (for was-sdk) does the formatting. Other wasm languages should do this too
 
 ## thanks
 
