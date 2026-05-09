@@ -34,7 +34,7 @@ jobs:
           add-to-path: 'true'
 
       - name: Build Web Host
-        run: npm run build:carts
+        run: npm ci && npm run build:carts
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
