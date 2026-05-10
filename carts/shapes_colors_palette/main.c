@@ -34,6 +34,7 @@ const char *colorNames[MAX_COLORS_COUNT] = {
 
 
 void CartUpdate() {
+    BeginDrawing();
     mousePoint = GetMousePosition();
 
     for (int i = 0; i < MAX_COLORS_COUNT; i++)
@@ -59,6 +60,7 @@ void CartUpdate() {
                 (int)(colorsRecs[i].y + colorsRecs[i].height - 20), 10, colors[i]);
         }
     }
+    EndDrawing();
 }
 
 void CartInit() {

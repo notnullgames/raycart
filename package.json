@@ -5,8 +5,9 @@
   "type": "module",
   "scripts": {
     "codegen": "node scripts/gen_cart_c_header.js",
+    "build:host": "node scripts/build_host.js",
     "build:carts": "node scripts/build_cart.js carts/*",
-    "build": "npm run codegen && npm run build:carts",
+    "build": "npm run codegen && npm run build:host && npm run build:carts",
     "start": "npm run build:carts && npx -y live-server --port=3000 host/web",
     "test": "node --test",
     "fmt": "npx -y prettier -w ."

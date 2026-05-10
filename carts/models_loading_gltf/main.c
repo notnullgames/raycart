@@ -1,5 +1,3 @@
-// TODO: this needs some host-support for animation
-
 /*******************************************************************************************
 *
 *   raylib [models] example - loading gltf
@@ -25,28 +23,65 @@
 #include "raylib.h"
 
 Camera camera = { 0 };
-Vector3 position = { 0.0f, 0.0f, 0.0f }; // Set model position
-
 Model model;
-int animsCount = 0;
-unsigned int animIndex = 0;
-unsigned int animCurrentFrame = 0;
+Vector3 position = { 0.0f, 0.0f, 0.0f }; // Set model world position
+ModelAnimation *anims;
 
-void CartUpdate () {
+// Animation playing variables
+int animCount = 0;
+unsigned int animIndex = 0;         // Current animation playing
+unsigned int animCurrentFrame = 0;  // Current animation frame
+
+
+void CartUpdate(void) {
+    // Update
+    //----------------------------------------------------------------------------------
     UpdateCamera(&camera, CAMERA_ORBITAL);
-    ClearBackground(RAYWHITE);
 
-    BeginMode3D(camera);
-    DrawModel(model, position, 1.0f, WHITE);    // Draw animated model
-    DrawGrid(10, 1.0f);
-    EndMode3D();
+    // Select current animation
+    if (IsKeyPressed(KEY_RIGHT)) animIndex = (animIndex + 1)%animCount;
+    else if (IsKeyPressed(KEY_LEFT)) animIndex = (animIndex + animCount - 1)%animCount;
 
-    DrawText("3D Model Loading Demo", 10, 10, 20, GRAY);
-    DrawText("(Animations not supported yet)", 10, 30, 10, DARKGRAY);
+    // Update model animation
+    animCurrentFrame = (animCurrentFrame + 1)%anims[animIndex].keyframeCount;
+    UpdateModelAnimation(model, anims[animIndex], (float)animCurrentFrame);
+    //----------------------------------------------------------------------------------
+
+    // Draw
+    //----------------------------------------------------------------------------------
+    BeginDrawing();
+
+        ClearBackground(RAYWHITE);
+
+        BeginMode3D(camera);
+
+            DrawModel(model, position, 1.0f, WHITE);
+
+            DrawGrid(10, 1.0f);
+
+        EndMode3D();
+
+        DrawText(TextFormat("Current animation: %s", anims[animIndex].name), 10, 40, 20, MAROON);
+        DrawText("Use the LEFT/RIGHT keys to switch animation", 10, 10, 20, GRAY);
+
+    EndDrawing();
+    //----------------------------------------------------------------------------------
 }
 
-void CartInit(void) {
-    TraceLog(LOG_INFO, "Window initialized");
+
+
+
+//------------------------------------------------------------------------------------
+// Program main entry point
+//------------------------------------------------------------------------------------
+int main(void)
+{
+    // Initialization
+    //--------------------------------------------------------------------------------------
+
+    InitWindow(800, 450, "raylib [models] example - loading gltf");
+
+    // Define the camera to look into our 3d world
 
     camera.position = (Vector3){ 6.0f, 6.0f, 6.0f };    // Camera position
     camera.target = (Vector3){ 0.0f, 2.0f, 0.0f };      // Camera looking at point
@@ -54,12 +89,14 @@ void CartInit(void) {
     camera.fovy = 45.0f;                                // Camera field-of-view Y
     camera.projection = CAMERA_PERSPECTIVE;             // Camera projection type
 
-    TraceLog(LOG_INFO, "Loading model...");
+    // Load model
     model = LoadModel("robot.glb");
-    TraceLog(LOG_INFO, "Model loaded successfully");
-}
 
-int main(void) {
-    InitWindow(800, 450, "raylib [models] example - loading gltf");
+    // Load model animations
+    anims = LoadModelAnimations("robot.glb", &animCount);
+
+    SetTargetFPS(60);                   // Set our game to run at 60 frames-per-second
+    //--------------------------------------------------------------------------------------
+
     return 0;
 }

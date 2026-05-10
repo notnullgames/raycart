@@ -255,7 +255,7 @@ void UpdateGame(void)
 // Draw game (one frame)
 void DrawGame(void)
 {
-
+    BeginDrawing();
     ClearBackground(RAYWHITE);
 
     if (!gameOver)
@@ -343,6 +343,7 @@ void DrawGame(void)
         if (pause) DrawText("GAME PAUSED", screenWidth/2 - MeasureText("GAME PAUSED", 40)/2, screenHeight/2 - 40, 40, GRAY);
     }
     else DrawText("PRESS [ENTER] TO PLAY AGAIN", GetScreenWidth()/2 - MeasureText("PRESS [ENTER] TO PLAY AGAIN", 20)/2, GetScreenHeight()/2 - 50, 20, GRAY);
+    EndDrawing();
 }
 
 int main() {

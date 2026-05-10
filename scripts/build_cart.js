@@ -4,7 +4,7 @@
 // Outputs each example's wasm to host/web/<name>.(wasm|zip) for the web dev server.
 
 import { execFile as execFileCb } from 'node:child_process'
-import { promisify, inspect } from 'node:util'
+import { promisify } from 'node:util'
 import { readdir, stat, mkdir, unlink, readFile } from 'node:fs/promises'
 import { join, basename } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -19,7 +19,17 @@ const INCLUDE = join(ROOT, 'include')
 const OUTDIR = join(ROOT, 'host/web/carts')
 const SRCDIR = join(ROOT, 'carts')
 const CFLAGS = [`-I${INCLUDE}`, '-O3', '-lm']
-const LDFLAGS = ['-Wl,--export=CartPreload', '-Wl,--export=CartInit', '-Wl,--export=CartUpdate', '-Wl,--export=malloc', '-Wl,--export=free', '-Wl,--allow-undefined']
+const LDFLAGS = [
+  '-Wl,--export=CartPreload',
+  '-Wl,--export=CartInit',
+  '-Wl,--export=CartUpdate',
+  '-Wl,--export=malloc',
+  '-Wl,--export=free',
+  '-Wl,--allow-undefined',
+  '-Wl,--import-memory', // share emscripten's wasm memory — no cross-heap copies
+  '-Wl,--global-base=33554432', // cart starts at 32MB, past emscripten's initial heap
+  '-Wl,--export=memory' // re-export imported memory so WASI shim can see it
+]
 
 async function getWasmInfo(filePath) {
   const buffer = await readFile(filePath)
@@ -51,11 +61,25 @@ async function getWasmInfo(filePath) {
         const mod = readString()
         const field = readString()
         const kind = buffer[pos++]
-        const index = readVarUint32()
         if (kind === 0) {
-          // It's a function
-          imports.push({ module: mod, field, typeIdx: index })
-          funcTypeIndices.push(index)
+          // function — type index
+          const typeIdx = readVarUint32()
+          imports.push({ module: mod, field, typeIdx })
+          funcTypeIndices.push(typeIdx)
+        } else if (kind === 1) {
+          // table — reftype (1 byte) + limits
+          pos++ // reftype
+          const flags = readVarUint32()
+          readVarUint32() // initial
+          if (flags & 1) readVarUint32() // max
+        } else if (kind === 2) {
+          // memory — limits
+          const flags = readVarUint32()
+          readVarUint32() // initial
+          if (flags & 1) readVarUint32() // max
+        } else if (kind === 3) {
+          // global — valtype (1 byte) + mutability (1 byte)
+          pos += 2
         }
       }
     } else if (sectionId === 3) {
@@ -71,7 +95,7 @@ async function getWasmInfo(filePath) {
         const name = readString()
         const kind = buffer[pos++]
         const index = readVarUint32()
-        if (kind === 0) exports.push({ name, funcIdx: index })
+        if (kind === 0) exports.push({ name, funcIdx: index }) // functions only
       }
     }
     pos = sectionEnd
