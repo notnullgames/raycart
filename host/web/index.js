@@ -35,10 +35,6 @@ const raylibImports = {
 const FILETYPE_REGULAR_FILE = 4
 const FILETYPE_DIRECTORY = 3
 
-function absPath(p) {
-  return p.startsWith('/') ? p : '/' + p
-}
-
 const emFs = createEmFs(rl.FS)
 
 const wasi = new WasiPreview1({ fs: emFs })
