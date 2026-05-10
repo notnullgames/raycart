@@ -1,111 +1,107 @@
-import createRaylib from './raylib_em.mjs'
 import WasiPreview1 from '@easywasm/wasi'
-import JSZip from 'jszip'
+import { unzipSync } from 'fflate'
+
+import createRaylib from './raylib_em.mjs'
 import createEmFs from './emfs.js'
 
-const status = document.getElementById('status')
-const canvas = document.getElementById('canvas')
+// Load and run a raycart wasm/zip cart.
+// canvas defaults to #canvas, status defaults to #status (accepts element or callback).
+export default async function loadRaycart(url, { canvas, status } = {}) {
+  canvas ??= document.getElementById('canvas')
+  const setStatus =
+    typeof status === 'function'
+      ? status
+      : (s) => {
+          if ((status ??= document.getElementById('status'))) status.textContent = s
+        }
 
-status.textContent = 'loading raylib…'
-const rl = await createRaylib({ canvas })
+  setStatus('loading raylib…')
+  const rl = await createRaylib({ canvas })
+  const sharedMemory = rl.wasmMemory
 
-const sharedMemory = rl.wasmMemory
-
-const dec = new TextDecoder()
-function readStr(ptr) {
-  const mem = new Uint8Array(sharedMemory.buffer)
-  let end = ptr
-  while (mem[end]) end++
-  return dec.decode(mem.subarray(ptr, end))
-}
-
-const raylibImports = {
-  ...Object.fromEntries(
-    Object.entries(rl)
-      .filter(([k]) => k.startsWith('_') && typeof rl[k] === 'function')
-      .map(([k, v]) => [k.slice(1), v])
-  ),
-  TraceLog: (level, ptr) => {
-    const msg = readStr(ptr)
-    ;[console.trace, console.trace, console.debug, console.info, console.warn, console.error, console.error][level]?.(`[raylib] ${msg}`) ?? console.log(`[raylib:${level}] ${msg}`)
+  const dec = new TextDecoder()
+  function readStr(ptr) {
+    const mem = new Uint8Array(sharedMemory.buffer)
+    let end = ptr
+    while (mem[end]) end++
+    return dec.decode(mem.subarray(ptr, end))
   }
-}
 
-// Proxy WASI fs calls into rl.FS so both the cart and raylib share one filesystem
-const FILETYPE_REGULAR_FILE = 4
-const FILETYPE_DIRECTORY = 3
-
-const emFs = createEmFs(rl.FS)
-
-const wasi = new WasiPreview1({ fs: emFs })
-
-const cartName = new URLSearchParams(location.search).get('cart') ?? 'basic.wasm'
-const wasmUrl = new URL(`./carts/${cartName}`, import.meta.url)
-
-status.textContent = 'fetching cart…'
-const cartBytes = new Uint8Array(await fetch(wasmUrl).then((r) => r.arrayBuffer()))
-let wasmBytes
-
-let zip
-if (wasmUrl.pathname.endsWith('.zip')) {
-  zip = await JSZip.loadAsync(cartBytes)
-  wasmBytes = await zip.files['main.wasm'].async('uint8array')
-} else {
-  wasmBytes = cartBytes
-}
-
-let exports
-try {
-  ;({
-    instance: { exports }
-  } = await WebAssembly.instantiate(wasmBytes, {
-    env: { memory: sharedMemory },
-    raylib: raylibImports,
-    wasi_snapshot_preview1: wasi
-  }))
-} catch (e) {
-  status.textContent = 'error loading wasm: ' + e.message
-  console.error(e)
-  throw e
-}
-
-if (zip) {
-  for (const [filename, fileData] of Object.entries(zip.files)) {
-    if (!fileData.dir && filename !== 'main.wasm') {
-      emFs.writeFileSync(filename, await fileData.async('uint8array'))
+  const raylibImports = {
+    ...Object.fromEntries(
+      Object.entries(rl)
+        .filter(([k]) => k.startsWith('_') && typeof rl[k] === 'function')
+        .map(([k, v]) => [k.slice(1), v])
+    ),
+    TraceLog: (level, ptr) => {
+      const msg = readStr(ptr)
+      ;[console.trace, console.trace, console.debug, console.info, console.warn, console.error, console.error][level]?.(`[raylib] ${msg}`) ?? console.log(`[raylib:${level}] ${msg}`)
     }
   }
-}
 
-try {
-  wasi.start(exports)
-} catch (e) {
-  if (e?.code !== 0) {
-    status.textContent = 'wasm error: ' + e.message
-    console.error(e)
+  const emFs = createEmFs(rl.FS)
+  const wasi = new WasiPreview1({ fs: emFs })
+
+  setStatus('fetching cart…')
+  const cartBytes = new Uint8Array(await fetch(url).then((r) => r.arrayBuffer()))
+  let wasmBytes, zip
+
+  if (String(url).endsWith('.zip')) {
+    zip = unzipSync(cartBytes)
+    wasmBytes = zip['main.wasm']
+  } else {
+    wasmBytes = cartBytes
+  }
+
+  let exports
+  try {
+    ;({
+      instance: { exports }
+    } = await WebAssembly.instantiate(wasmBytes, {
+      env: { memory: sharedMemory },
+      raylib: raylibImports,
+      wasi_snapshot_preview1: wasi
+    }))
+  } catch (e) {
+    setStatus('error loading wasm: ' + e.message)
     throw e
   }
-}
 
-status.textContent = ''
-
-const CartPreload = exports.CartPreload ?? null
-const CartInit = exports.CartInit ?? null
-const CartUpdate = exports.CartUpdate ?? null
-
-if (CartPreload && zip) {
-  const files = Object.keys(zip.files)
-  for (let i = 0; i < files.length; i++) {
-    CartPreload(i / files.length)
+  if (zip) {
+    for (const [filename, data] of Object.entries(zip)) {
+      if (filename !== 'main.wasm') emFs.writeFileSync(filename, data)
+    }
   }
-}
 
-if (CartInit) CartInit()
+  try {
+    wasi.start(exports)
+  } catch (e) {
+    if (e?.code !== 0) {
+      setStatus('wasm error: ' + e.message)
+      throw e
+    }
+  }
 
-if (CartUpdate) {
-  function loop() {
-    CartUpdate()
+  setStatus('')
+
+  const CartPreload = exports.CartPreload ?? null
+  const CartInit = exports.CartInit ?? null
+  const CartUpdate = exports.CartUpdate ?? null
+
+  if (CartPreload && zip) {
+    const files = Object.keys(zip)
+    for (let i = 0; i < files.length; i++) CartPreload(i / files.length)
+  }
+
+  if (CartInit) CartInit()
+
+  if (CartUpdate) {
+    function loop() {
+      CartUpdate()
+      requestAnimationFrame(loop)
+    }
     requestAnimationFrame(loop)
   }
-  requestAnimationFrame(loop)
+
+  return { rl, exports, emFs }
 }

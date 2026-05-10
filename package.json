@@ -3,6 +3,12 @@
   "version": "0.0.1",
   "description": "Wasm host exposing the full raylib API — compile games with wasi-sdk, run on native or web without recompile",
   "type": "module",
+  "exports": "./host/web/index.js",
+  "files": [
+    "host/web/index.js",
+    "host/web/emfs.js",
+    "host/web/raylib_em.mjs"
+  ],
   "scripts": {
     "codegen": "node scripts/gen_cart_c_header.js",
     "build:host": "node scripts/build_host.js",
@@ -12,7 +18,8 @@
     "test": "node --test",
     "fmt": "npx -y prettier -w ."
   },
-  "devDependencies": {
-    "adm-zip": "^0.5.17"
+  "dependencies": {
+    "@easywasm/wasi": "^0.0.8",
+    "fflate": "^0.8.2"
   }
 }

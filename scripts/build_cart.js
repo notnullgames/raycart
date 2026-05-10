@@ -5,10 +5,10 @@
 
 import { execFile as execFileCb } from 'node:child_process'
 import { promisify } from 'node:util'
-import { readdir, stat, mkdir, unlink, readFile } from 'node:fs/promises'
+import { readdir, stat, mkdir, unlink, readFile, writeFile } from 'node:fs/promises'
 import { join, basename } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import AdmZip from 'adm-zip'
+import { zipSync } from 'fflate'
 
 const execFile = promisify(execFileCb)
 
@@ -143,12 +143,12 @@ async function buildCart(dir) {
   const outWasm = join(OUTDIR, `${name}.wasm`)
   const outZip = join(OUTDIR, `${name}.zip`)
 
-  let zip
+  let zipFiles
 
   if (assets.length) {
-    zip = new AdmZip()
+    zipFiles = {}
     for (const f of assets) {
-      zip.addFile(f, await readFile(join(dir, f)))
+      zipFiles[f] = new Uint8Array(await readFile(join(dir, f)))
     }
   }
 
@@ -169,14 +169,14 @@ async function buildCart(dir) {
     console.log(`    ${f.name}(${f.signature.params.join(', ')}) => ${f.signature.results[0] || 'null'}`)
   }
 
-  if (zip) {
+  if (zipFiles) {
     try {
       const s = await stat(outWasm)
-      zip.addFile('main.wasm', await readFile(outWasm))
+      zipFiles['main.wasm'] = new Uint8Array(await readFile(outWasm))
       await unlink(outWasm)
     } catch {}
 
-    zip.writeZip(outZip)
+    await writeFile(outZip, zipSync(zipFiles))
   }
 }
 

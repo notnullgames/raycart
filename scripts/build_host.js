@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 
 import { execFileSync, execSync } from 'node:child_process'
+import { writeFileSync, mkdirSync } from 'node:fs'
 import { readFile, stat, mkdir } from 'node:fs/promises'
-import { join } from 'node:path'
+import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import AdmZip from 'adm-zip'
+import { unzipSync } from 'fflate'
 
 const ROOT = join(fileURLToPath(import.meta.url), '../..')
 const RAYLIB_DIR = join(ROOT, 'raylib-6.0_webassembly')
@@ -20,7 +21,12 @@ async function ensureRaylib() {
     const res = await fetch(RAYLIB_URL)
     if (!res.ok) throw new Error(`Download failed: ${res.status} ${res.statusText}`)
     const buf = await res.arrayBuffer()
-    new AdmZip(Buffer.from(buf)).extractAllTo(ROOT, true)
+    const files = unzipSync(new Uint8Array(buf))
+    for (const [name, data] of Object.entries(files)) {
+      const dest = join(ROOT, name)
+      mkdirSync(dirname(dest), { recursive: true })
+      writeFileSync(dest, data)
+    }
     console.log('Extracted raylib-6.0_webassembly')
   }
 }
