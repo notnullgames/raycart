@@ -26,6 +26,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Install emsdk
+        uses: emscripten-core/setup-emsdk@v15
+        with:
+          version: 5.0.4
+          actions-cache-folder: 'emsdk-cache'
+
       - name: Install WASI SDK
         uses: konsumer/install-wasi-sdk@v1
         with:
@@ -34,7 +40,7 @@ jobs:
           add-to-path: 'true'
 
       - name: Build Web Host
-        run: npm ci && npm run build:carts
+        run: npm ci && npm run build
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
