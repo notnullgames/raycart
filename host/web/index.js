@@ -67,17 +67,6 @@ export default async function loadRaycart(url, { canvas, status } = {}) {
     throw e
   }
 
-  try {
-    wasi.start(exports)
-  } catch (e) {
-    if (e?.code !== 0) {
-      setStatus('wasm error: ' + e.message)
-      throw e
-    }
-  }
-
-  setStatus('')
-
   const CartPreload = exports.CartPreload ?? null
   const CartInit = exports.CartInit ?? null
   const CartUpdate = exports.CartUpdate ?? null
@@ -90,6 +79,17 @@ export default async function loadRaycart(url, { canvas, status } = {}) {
       if (CartPreload) CartPreload((i + 1) / assets.length)
     }
   }
+
+  try {
+    wasi.start(exports)
+  } catch (e) {
+    if (e?.code !== 0) {
+      setStatus('wasm error: ' + e.message)
+      throw e
+    }
+  }
+
+  setStatus('')
 
   if (CartInit) CartInit()
 
