@@ -68,7 +68,26 @@ void CartUpdate(void) {
     //----------------------------------------------------------------------------------
 }
 
+void CartInit() {
+    model = LoadModel("robot.glb");
+    anims = LoadModelAnimations("robot.glb", &animCount);
+}
 
+void CartPreload(float progress) {
+    int sw = GetScreenWidth();
+    int sh = GetScreenHeight();
+    int barW = sw * 2 / 3;
+    int barH = 20;
+    int barX = (sw - barW) / 2;
+    int barY = (sh - barH) / 2;
+
+    BeginDrawing();
+        ClearBackground(RAYWHITE);
+        DrawRectangleLines(barX, barY, barW, barH, DARKGRAY);
+        DrawRectangle(barX, barY, (int)(barW * progress), barH, MAROON);
+        DrawText(TextFormat("Loading... %d%%", (int)(progress * 100)), barX, barY - 24, 20, DARKGRAY);
+    EndDrawing();
+}
 
 
 //------------------------------------------------------------------------------------
@@ -88,12 +107,6 @@ int main(void)
     camera.up = (Vector3){ 0.0f, 1.0f, 0.0f };          // Camera up vector (rotation towards target)
     camera.fovy = 45.0f;                                // Camera field-of-view Y
     camera.projection = CAMERA_PERSPECTIVE;             // Camera projection type
-
-    // Load model
-    model = LoadModel("robot.glb");
-
-    // Load model animations
-    anims = LoadModelAnimations("robot.glb", &animCount);
 
     SetTargetFPS(60);                   // Set our game to run at 60 frames-per-second
     //--------------------------------------------------------------------------------------
