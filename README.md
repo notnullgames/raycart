@@ -4,8 +4,6 @@ My main testing target is C code that looks like normal raylib, and is compiled 
 
 The "web" in webassembly is a misnomer here. It's not just for the web (but will run there) it's a sandboxed runtime abstraction, for all kinds of places. No recompile is needed, and it will run on many things (browser, native on desktop computer, barebones pi, esp32, etc.)
 
-I am still working on filling in all the raylib API. A lot is missing.
-
 ## cart
 
 A "cart" is just a wasm file, or a zip file with `main.wasm` and any assets it needs.
