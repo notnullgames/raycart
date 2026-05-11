@@ -32,7 +32,7 @@ int animCount = 0;
 unsigned int animIndex = 0;         // Current animation playing
 unsigned int animCurrentFrame = 0;  // Current animation frame
 
-
+// called once per frame
 void CartUpdate(void) {
     // Update
     //----------------------------------------------------------------------------------
@@ -68,11 +68,13 @@ void CartUpdate(void) {
     //----------------------------------------------------------------------------------
 }
 
+// called after assets are loaded into FS
 void CartInit() {
     model = LoadModel("robot.glb");
     anims = LoadModelAnimations("robot.glb", &animCount);
 }
 
+// called when each asset is loaded
 void CartPreload(float progress) {
     int sw = GetScreenWidth();
     int sh = GetScreenHeight();
@@ -91,7 +93,7 @@ void CartPreload(float progress) {
 
 
 //------------------------------------------------------------------------------------
-// Program main entry point
+// Program main entry point: no filesystem loaded yet
 //------------------------------------------------------------------------------------
 int main(void)
 {
