@@ -19,7 +19,7 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 const ROOT = join(__dirname, '..')
 
-const api = JSON.parse(await readFile(join(ROOT, 'raylib_api.json'), 'utf8'))
+const api = JSON.parse(await readFile(join(__dirname, 'raylib_api.json'), 'utf8'))
 
 // ── Type helpers ──────────────────────────────────────────────────────────────
 
@@ -339,8 +339,7 @@ void CartUpdate();
 ${functions.join('\n\n')}
 `
 
-await mkdir(join(ROOT, 'include'), { recursive: true })
-await writeFile(join(ROOT, 'include', 'raylib.h'), header)
+await writeFile(join(ROOT, 'src/raylib.h'), header)
 
 const direct = api.functions.filter((f) => {
   if (EXCLUDE.has(f.name)) return false

@@ -40,7 +40,10 @@ jobs:
           add-to-path: 'true'
 
       - name: Build Web Host
-        run: npm ci && npm run build
+        run: |
+          npm ci
+          npm run build:host_web
+          npm run build:carts
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
@@ -48,7 +51,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: 'host/web'
+          path: 'web'
 
       - name: Deploy to GitHub Pages
         id: deployment

@@ -7,11 +7,15 @@ import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { unzipSync } from 'fflate'
 
-const ROOT = join(fileURLToPath(import.meta.url), '../..')
-const RAYLIB_DIR = join(ROOT, 'raylib-6.0_webassembly')
-const RAYLIB_URL = 'https://github.com/raysan5/raylib/releases/download/6.0/raylib-6.0_webassembly.zip'
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
 
-const api = JSON.parse(await readFile(join(ROOT, 'raylib_api.json'), 'utf8'))
+const api = JSON.parse(await readFile(join(__dirname, 'raylib_api.json'), 'utf8'))
+
+const ROOT = join(__dirname, '..')
+const RAYLIB_DIR = join(ROOT, 'vendor/raylib-6.0_webassembly')
+const RAYLIB_URL = 'https://github.com/raysan5/raylib/releases/download/6.0/raylib-6.0_webassembly.zip'
+const OUTDIR = join(ROOT, 'web')
 
 async function ensureRaylib() {
   try {
@@ -24,7 +28,7 @@ async function ensureRaylib() {
     const files = unzipSync(new Uint8Array(buf))
     for (const [name, data] of Object.entries(files)) {
       if (name.endsWith('/')) continue
-      const dest = join(ROOT, name)
+      const dest = join(ROOT, 'vendor', name)
       mkdirSync(dirname(dest), { recursive: true })
       writeFileSync(dest, data)
     }
@@ -33,7 +37,7 @@ async function ensureRaylib() {
 }
 
 function genExports() {
-  const libPath = join(ROOT, 'raylib-6.0_webassembly/lib/libraylib.web.a')
+  const libPath = join(ROOT, 'vendor/raylib-6.0_webassembly/lib/libraylib.web.a')
   const libSymbols = new Set(
     execSync(`nm "${libPath}"`)
       .toString()
@@ -50,7 +54,7 @@ function genExports() {
 }
 
 async function buildHost(exportedFns) {
-  const src = await readFile(join(ROOT, 'host_web.c'), 'utf8')
+  const src = await readFile(join(ROOT, 'src/host/web/main.c'), 'utf8')
   const firstLine = src.split('\n')[0]
   if (!firstLine.startsWith('// emcc ')) throw new Error('host_web.c line 1 must be the emcc command comment')
   const [, ...args] = firstLine.replace(/^\/\/\s*/, '').split(/\s+/)
@@ -59,12 +63,12 @@ async function buildHost(exportedFns) {
   const idx = args.findIndex((a) => a.startsWith('-sEXPORTED_FUNCTIONS='))
   if (idx !== -1) args[idx] = `-sEXPORTED_FUNCTIONS=${exportedFns.join(',')}`
 
-  await mkdir(join(ROOT, 'host/web'), { recursive: true })
   console.log('Building host_web.c...')
   execFileSync('emcc', args, { cwd: ROOT, stdio: 'inherit' })
-  console.log('Built host/web/raylib_em.mjs')
+  console.log(`Built ${OUTDIR}/raylib_em.mjs`)
 }
 
+await mkdir(OUTDIR, { recursive: true })
 await ensureRaylib()
 const exportedFns = genExports()
 await buildHost(exportedFns)

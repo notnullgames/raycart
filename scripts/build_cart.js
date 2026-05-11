@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 // Compile all examples to wasm/zip
-// Outputs each example's wasm to host/web/<name>.(wasm|zip) for the web dev server.
+// Outputs each example's wasm to dist/carts/<name>.(wasm|zip) for the web dev server.
 
 import { execFile as execFileCb } from 'node:child_process'
 import { promisify } from 'node:util'
@@ -15,9 +15,8 @@ const execFile = promisify(execFileCb)
 const ROOT = join(fileURLToPath(import.meta.url), '../..')
 const WASI = process.env.WASI_SDK ?? '/opt/wasi-sdk'
 const CLANG = join(WASI, 'bin/clang')
-const INCLUDE = join(ROOT, 'include')
-const OUTDIR = join(ROOT, 'host/web/carts')
-const SRCDIR = join(ROOT, 'carts')
+const INCLUDE = join(ROOT, 'src')
+const OUTDIR = join(ROOT, 'web/carts')
 const CFLAGS = [`-I${INCLUDE}`, '-O3', '-lm']
 const LDFLAGS = [
   '-Wl,--export=CartPreload',
