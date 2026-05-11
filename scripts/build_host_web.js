@@ -23,6 +23,7 @@ async function ensureRaylib() {
     const buf = await res.arrayBuffer()
     const files = unzipSync(new Uint8Array(buf))
     for (const [name, data] of Object.entries(files)) {
+      if (name.endsWith('/')) continue
       const dest = join(ROOT, name)
       mkdirSync(dirname(dest), { recursive: true })
       writeFileSync(dest, data)
