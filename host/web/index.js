@@ -67,12 +67,6 @@ export default async function loadRaycart(url, { canvas, status } = {}) {
     throw e
   }
 
-  if (zip) {
-    for (const [filename, data] of Object.entries(zip)) {
-      if (filename !== 'main.wasm') emFs.writeFileSync(filename, data)
-    }
-  }
-
   try {
     wasi.start(exports)
   } catch (e) {
@@ -88,9 +82,13 @@ export default async function loadRaycart(url, { canvas, status } = {}) {
   const CartInit = exports.CartInit ?? null
   const CartUpdate = exports.CartUpdate ?? null
 
-  if (CartPreload && zip) {
-    const files = Object.keys(zip)
-    for (let i = 0; i < files.length; i++) CartPreload(i / files.length)
+  if (zip) {
+    const assets = Object.entries(zip).filter(([name]) => name !== 'main.wasm')
+    for (let i = 0; i < assets.length; i++) {
+      const [filename, data] = assets[i]
+      emFs.writeFileSync(filename, data)
+      if (CartPreload) CartPreload((i + 1) / assets.length)
+    }
   }
 
   if (CartInit) CartInit()
