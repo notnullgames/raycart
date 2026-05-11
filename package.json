@@ -12,6 +12,8 @@
   "scripts": {
     "gen:cart_c": "node scripts/gen_cart_c_header.js",
     "build:host_web": "node scripts/build_host_web.js",
+    "build:native": "cmake -S src/host/native -B build && cmake --build build -j $(nproc)",
+    "gen:host_native": "node scripts/gen_host_native.js",
     "build:carts": "node scripts/build_cart.js src/carts/*",
     "prebuild:carts": "npm run gen:cart_c",
     "start": "npx -y live-server web --port=3000",
